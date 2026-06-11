@@ -375,11 +375,9 @@ function Main() {
       <div className="bg-neutral-50 border-b border-neutral-100 py-3">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center space-x-2">
-            <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
-            <span className="text-xs text-neutral-500 font-medium">Currently customizing for:</span>
-            <span className="text-xs font-bold text-neutral-900 bg-white border border-neutral-200 px-2.5 py-1 rounded-md shadow-xs">
-              {globalSelectedModel.name}
-            </span>
+          
+          
+            
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-xs text-neutral-400 font-medium">Change Device:</span>
