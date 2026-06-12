@@ -1,20 +1,55 @@
-import express from "express"
+import express from "express";
+import cors from "cors";
+import connectionDB from "./Database/Connection.js";
+import categoryRoutes from "./Routes/categoryRoutes.js";
+import productRoutes from "./Routes/productRoutes.js";
+import orderRoutes from "./Routes/orderRoutes.js";
 
-import cors from "cors"
-import connectionDB from "./Database/Connection.js"
+const app = express();
+const PORT = process.env.PORT || 6001;
 
-const app =express()
-const PORT = process.env.PORT || 6001
+app.use(express.json({ limit: "10mb" }));
 
-app.use (express.json())
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:5174",
+    ],
+    credentials: true,
+  })
+);
 
-app.use(cors({
-    origin:["http://localhost:5173"],
-    credentials:true
-}))
+app.get("/", (req, res) => {
+  res.json({ message: "Aplod API is running" });
+});
+
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", service: "aplod-backend" });
+});
+
+app.use("/api/categories", categoryRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/orders", orderRoutes);
+
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
+
+app.use((error, req, res, next) => {
+  res.status(error.status || 500).json({
+    message: error.message || "Server error",
+  });
+});
 
 connectionDB()
-
-app.listen(PORT,()=>{
-    console.log(`Server is running ${PORT}`);
-})
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server is running ${PORT}`);
+    });
+  })
+  .catch(() => {
+    console.log("Server not started because database connection failed");
+  });

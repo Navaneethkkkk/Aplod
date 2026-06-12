@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ShoppingBag,
   Search,
@@ -16,9 +17,11 @@ import {
   ArrowRight,
   Sparkles,
 } from 'lucide-react';
+import { api } from '../api';
 import heroBg from '../assets/hero-bg.webp';
 
 function Main() {
+  const navigate = useNavigate();
   // Available iPhone Models
   const MODELS = [
     { id: '16-pro-max', name: 'iPhone 16 Pro Max' },
@@ -36,6 +39,7 @@ function Main() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [savedProducts, setSavedProducts] = useState([]);
 
   // Floating WhatsApp Support
   const [whatsappActive, setWhatsappActive] = useState(false);
@@ -63,9 +67,6 @@ function Main() {
     'c-3': { id: 'midnight', name: 'Midnight Navy', hex: '#1c2430', secondary: '#0e141c' },
     'c-4': { id: 'black-bumper', name: 'Matte Black', hex: '#2c2d30', secondary: '#111111' },
   });
-
-  // Selected Product for Customizer Detail Modal
-  const [detailProduct, setDetailProduct] = useState(null);
 
   // Raw Product Data conforming precisely to the CASEGEAR screenshot styles
   const productsData = {
@@ -189,6 +190,49 @@ function Main() {
     ],
   };
 
+  useEffect(() => {
+    const normalizeSavedProducts = (products) =>
+      products
+        .filter((product) => product.status !== 'Draft')
+        .map((product) => {
+          const categoryText = `${product.category?.name || ''} ${product.category?.slug || ''}`.toLowerCase();
+          const categoryKey = categoryText.includes('screen') || categoryText.includes('protector')
+            ? 'protectors'
+            : categoryText.includes('charg')
+              ? 'charging'
+              : 'cases';
+          const images = product.images?.length ? product.images : product.imageUrl ? [product.imageUrl] : [];
+
+          return {
+            id: product._id,
+            title: product.name,
+            subtitle: product.category?.name || 'Premium accessory',
+            rating: 4.8,
+            reviewsCount: 0,
+            price: product.price || 0,
+            mrp: null,
+            type: 'uploaded',
+            categoryKey,
+            coverImage: images[0] || '',
+            images,
+            description: product.description,
+            colors: [{ id: 'default', name: 'Default', hex: '#111111', secondary: '#333333' }],
+          };
+        });
+
+    const localProducts = JSON.parse(localStorage.getItem('aplodProducts') || '[]');
+    if (localProducts.length) {
+      setSavedProducts(normalizeSavedProducts(localProducts));
+    }
+
+    api
+      .getProducts()
+      .then((products) => {
+        setSavedProducts(normalizeSavedProducts([...localProducts, ...products]));
+      })
+      .catch(() => setSavedProducts(normalizeSavedProducts(localProducts)));
+  }, []);
+
   const triggerToast = (message) => {
     setToast({ show: true, message });
     window.setTimeout(() => setToast({ show: false, message: '' }), 3500);
@@ -277,11 +321,12 @@ function Main() {
   };
 
   const filteredProducts = useMemo(() => {
-    const categoryItems = productsData[activeCategory] || [];
+    const uploadedItems = savedProducts.filter((product) => product.categoryKey === activeCategory);
+    const categoryItems = [...uploadedItems, ...(productsData[activeCategory] || [])];
     if (!searchQuery.trim()) return categoryItems;
     const q = searchQuery.toLowerCase();
     return categoryItems.filter((p) => p.title.toLowerCase().includes(q) || p.subtitle.toLowerCase().includes(q));
-  }, [activeCategory, productsData, searchQuery]);
+  }, [activeCategory, savedProducts, searchQuery]);
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#111111] font-sans antialiased selection:bg-black selection:text-white">
@@ -530,11 +575,19 @@ function Main() {
               return (
                 <div
                   key={product.id}
-                  onClick={() => setDetailProduct(product)}
+                  onClick={() => navigate(`/store-product/${product.id}`, { state: { product } })}
                   className="bg-white rounded-[24px] p-5 flex flex-col justify-between border border-neutral-200/60 shadow-xs hover:shadow-md transition-all duration-300 group cursor-pointer"
                 >
                   <div className="bg-[#f5f5f7] rounded-[20px] h-72 flex items-center justify-center p-6 relative overflow-hidden group-hover:bg-[#f0f0f2] transition duration-300">
                     <div className="w-full h-full max-h-[220px] transition-all duration-500 transform group-hover:scale-105">
+                      {product.coverImage && (
+                        <img
+                          src={product.coverImage}
+                          alt={product.title}
+                          className="h-full w-full object-contain"
+                        />
+                      )}
+
                       {product.type === 'leather' && (
                         <svg viewBox="0 0 160 320" className="w-full h-full drop-shadow-xl" xmlns="http://www.w3.org/2000/svg">
                           <rect x="15" y="15" width="130" height="290" rx="26" fill={activeColor.hex} stroke={activeColor.secondary} strokeWidth="1.5" />

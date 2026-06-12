@@ -1,14 +1,6 @@
 import React from "react";
-import {
-  Plus,
-  Bell,
-  Settings,
-  Search,
-  DollarSign,
-  ShoppingCart,
-  Package,
-  TrendingUp,
-} from "lucide-react";
+import { DollarSign, ShoppingCart, Package, TrendingUp } from "lucide-react";
+
 import Sidebar from "./Sidebar";
 
 import {
@@ -18,9 +10,13 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  CartesianGrid,
 } from "recharts";
+import Header from "./Header";
+import { useAdminTheme } from "../context/AdminThemeContext";
 
 function AdminPanel() {
+  const { isDark } = useAdminTheme();
   const revenueData = [
     { month: "Jan", revenue: 4000 },
     { month: "Feb", revenue: 3000 },
@@ -34,159 +30,144 @@ function AdminPanel() {
     {
       title: "Total Revenue",
       value: "$124,500",
-      icon: <DollarSign size={22} />,
+      change: "+12.3%",
+      isPositive: true,
+      icon: <DollarSign size={20} />,
     },
     {
-      title: "Orders",
+      title: "Orders Filed",
       value: "1,432",
-      icon: <ShoppingCart size={22} />,
+      change: "+8.2%",
+      isPositive: true,
+      icon: <ShoppingCart size={20} />,
     },
     {
-      title: "Products",
+      title: "Active Products",
       value: "3,204",
-      icon: <Package size={22} />,
+      change: "-1.5%",
+      isPositive: false,
+      icon: <Package size={20} />,
     },
     {
       title: "Avg Order Value",
       value: "$86.94",
-      icon: <TrendingUp size={22} />,
+      change: "+4.1%",
+      isPositive: true,
+      icon: <TrendingUp size={20} />,
     },
   ];
 
-  const categories = [
-    "iPhone Cases",
-    "Screen Protectors",
-    "Power & Charging",
-  ];
-
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className={`flex h-screen overflow-hidden transition-colors ${
+      isDark ? "bg-slate-900 text-slate-100" : "bg-slate-100/40 text-slate-900"
+    }`}>
       <Sidebar />
 
-      <div className="md:ml-60 flex-1">
-        <header className="sticky top-0 z-20 bg-white border-b h-16 px-4 flex items-center justify-between shadow-sm">
-          <div className="relative">
-            <Search
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <Header />
 
-            <input
-              type="text"
-              placeholder="Search inventory..."
-              className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 w-full max-w-none space-y-6">
+          {/* Page Title */}
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold">Overview Dashboard</h2>
+            <p className={`text-sm mt-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+              Real-time metrics and store inventory updates.
+            </p>
           </div>
 
-          <div className="flex items-center gap-4">
-            <Bell size={20} className="cursor-pointer text-gray-600" />
-            <Settings size={20} className="cursor-pointer text-gray-600" />
-
-            <img
-              src="https://i.pravatar.cc/40"
-              alt="profile"
-              className="w-10 h-10 rounded-full border"
-            />
-          </div>
-        </header>
-
-        <div className="p-6 space-y-8">
-          <div className="flex justify-between">
-            <div>
-              <h2 className="text-3xl font-bold">Dashboard</h2>
-              <p className="text-gray-500 mt-1">
-                Welcome back. Here's what's happening today.
-              </p>
-            </div>
-
-            <button className="bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-800">
-              <Plus size={18} />
-              Add Product
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+          {/* KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
             {kpiData.map((item, index) => (
               <div
                 key={index}
-                className="bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition"
+                className={`p-6 rounded-2xl border transition-all duration-300 ${
+                  isDark
+                    ? "bg-slate-950 border-slate-800"
+                    : "bg-white border-slate-100 shadow-sm hover:shadow-md"
+                }`}
               >
-                <div className="flex justify-between items-center">
-                  <p className="text-sm text-gray-500">{item.title}</p>
+                <div className="flex justify-between items-start">
+                  <p className={`text-xs uppercase font-semibold ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+                    {item.title}
+                  </p>
 
-                  <div className="text-blue-700">{item.icon}</div>
+                  <div className={`p-2 rounded-xl ${isDark ? "bg-indigo-500/15 text-indigo-300" : "bg-indigo-50 text-indigo-600"}`}>
+                    {item.icon}
+                  </div>
                 </div>
 
-                <h3 className="text-3xl font-bold mt-4">{item.value}</h3>
+                <div className="mt-4 flex items-center gap-2">
+                  <h3 className="text-2xl font-bold">{item.value}</h3>
+
+                  <span
+                    className={`text-xs px-2 py-1 rounded ${
+                      item.isPositive
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {item.change}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
 
-          <div className="bg-white p-6 rounded-xl border shadow-sm">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-semibold">
-                Revenue Analytics
-              </h3>
+          {/* Revenue Chart */}
+          <div className={`p-6 rounded-2xl border w-full transition-all duration-300 ${
+            isDark
+              ? "bg-slate-950 border-slate-800"
+              : "bg-white border-slate-100 shadow-sm hover:shadow-md"
+          }`}>
+            <div className="flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center mb-6">
+              <div>
+                <h3 className="text-xl font-bold">Revenue Performance</h3>
+                <p className={`text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                  Net revenue growth statistics
+                </p>
+              </div>
 
-              <select className="border rounded-lg px-3 py-2">
+              <select className={`border rounded-lg px-3 py-2 text-sm outline-none ${
+                isDark ? "bg-slate-900 border-slate-800 text-slate-100" : "bg-white border-slate-200"
+              }`}>
                 <option>Last 6 Months</option>
+                <option>Last 12 Months</option>
               </select>
             </div>
 
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={revenueData}>
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Bar
-                  dataKey="revenue"
-                  radius={[8, 8, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div>
-            <div className="flex justify-between items-center mb-5">
-              <h3 className="text-2xl font-semibold">
-                Primary Categories
-              </h3>
-
-              <button className="text-blue-700 font-medium">
-                View All
-              </button>
-            </div>
-
-            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {categories.map((category, index) => (
-                <div
-                  key={index}
-                  className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition"
+            <div className="w-full h-[220px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={revenueData}
+                  margin={{
+                    top: 10,
+                    right: 10,
+                    left: -10,
+                    bottom: 0,
+                  }}
                 >
-                  <img
-                    src={`https://picsum.photos/400/250?random=${index}`}
-                    alt={category}
-                    className="w-full h-52 object-cover"
+                  <CartesianGrid
+                    stroke={isDark ? "#1e293b" : "#f1f5f9"}
+                    strokeDasharray="3 3"
+                    vertical={false}
                   />
 
-                  <div className="p-4">
-                    <h4 className="text-xl font-semibold">
-                      {category}
-                    </h4>
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} />
 
-                    <p className="text-gray-500 mt-2 text-sm">
-                      Manage products under this category.
-                    </p>
+                  <YAxis axisLine={false} tickLine={false} />
 
-                    <button className="mt-4 w-full border border-blue-700 text-blue-700 py-2 rounded-lg hover:bg-blue-700 hover:text-white transition">
-                      Manage Category
-                    </button>
-                  </div>
-                </div>
-              ))}
+                  <Tooltip />
+
+                  <Bar
+                    dataKey="revenue"
+                    fill="#4f46e5"
+                    radius={[6, 6, 0, 0]}
+                    maxBarSize={40}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
-
         </div>
       </div>
     </div>
