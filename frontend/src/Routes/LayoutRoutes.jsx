@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Main from '../pages/Main'
 import AdminLogin from '../pages/AdminLogin'
 import AdminPanel from '../pages/AdminPanel'
+import Orders from '../pages/Orders'
 
 function LayoutRoutes() {
   return (
@@ -12,6 +13,7 @@ function LayoutRoutes() {
         <Route path='/' element= {<Main/>}/>
         <Route path='/login' element= {<AdminLogin/>}/>
         <Route path='/adminpanel' element={<AdminPanel/>}/>
+        <Route path='/oders' element={<Orders/>}/>
     </Routes>
     </BrowserRouter>
       
