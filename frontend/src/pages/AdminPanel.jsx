@@ -1,250 +1,196 @@
-import React, { useState } from 'react';
-import { ShoppingBag, Package, TrendingUp, Users, Eye, Plus, Search, Filter } from 'lucide-react';
+import React from "react";
+import {
+  Plus,
+  Bell,
+  Settings,
+  Search,
+  DollarSign,
+  ShoppingCart,
+  Package,
+  TrendingUp,
+} from "lucide-react";
+import Sidebar from "./Sidebar";
 
-// Sample case data with images, prices, and details
-const initialCases = [
-  {
-    id: 1,
-    name: "Premium Leather Case",
-    brand: "TechArmor",
-    price: 49.99,
-    color: "Black",
-    material: "Genuine Leather",
-    stock: 45,
-    sold: 128,
-    image: "https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=200&h=200&fit=crop",
-    rating: 4.8,
-  },
-  {
-    id: 2,
-    name: "Clear Crystal Case",
-    brand: "Spigen",
-    price: 19.99,
-    color: "Transparent",
-    material: "Polycarbonate",
-    stock: 120,
-    sold: 342,
-    image: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=200&h=200&fit=crop",
-    rating: 4.5,
-  },
-  {
-    id: 3,
-    name: "Rugged Armor Case",
-    brand: "OtterBox",
-    price: 59.99,
-    color: "Gunmetal",
-    material: "Silicone + Plastic",
-    stock: 28,
-    sold: 95,
-    image: "https://images.unsplash.com/photo-1616348436168-de43ad0db179?w=200&h=200&fit=crop",
-    rating: 4.9,
-  },
-  {
-    id: 4,
-    name: "Slim Carbon Fiber",
-    brand: "Pitaka",
-    price: 89.99,
-    color: "Carbon",
-    material: "Aramid Fiber",
-    stock: 15,
-    sold: 67,
-    image: "https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=200&h=200&fit=crop",
-    rating: 4.7,
-  },
-  {
-    id: 5,
-    name: "MagSafe Compatible",
-    brand: "Apple",
-    price: 79.99,
-    color: "Midnight",
-    material: "Silicone",
-    stock: 52,
-    sold: 210,
-    image: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=200&h=200&fit=crop",
-    rating: 4.6,
-  },
-  {
-    id: 6,
-    name: "Wallet Case",
-    brand: "Smartish",
-    price: 34.99,
-    color: "Brown",
-    material: "PU Leather",
-    stock: 33,
-    sold: 88,
-    image: "https://images.unsplash.com/photo-1616348436168-de43ad0db179?w=200&h=200&fit=crop",
-    rating: 4.4,
-  },
-];
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
 
-// Calculate totals
-const totalCases = initialCases.reduce((sum, item) => sum + item.stock, 0);
-const totalSales = initialCases.reduce((sum, item) => sum + item.sold, 0);
-const totalRevenue = initialCases.reduce((sum, item) => sum + (item.sold * item.price), 0);
-const averagePrice = (initialCases.reduce((sum, item) => sum + item.price, 0) / initialCases.length).toFixed(2);
+function AdminPanel() {
+  const revenueData = [
+    { month: "Jan", revenue: 4000 },
+    { month: "Feb", revenue: 3000 },
+    { month: "Mar", revenue: 5000 },
+    { month: "Apr", revenue: 4500 },
+    { month: "May", revenue: 6000 },
+    { month: "Jun", revenue: 5500 },
+  ];
 
-const StatCard = ({ title, value, icon: Icon, color, trend }) => (
-  <div className="bg-white rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-    <div className="flex justify-between items-start">
-      <div>
-        <p className="text-gray-500 text-sm font-medium mb-1">{title}</p>
-        <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
-        {trend && <p className="text-green-500 text-xs mt-2 flex items-center gap-1"><TrendingUp size={12}/> +{trend}% from last month</p>}
-      </div>
-      <div className={`p-3 rounded-xl ${color}`}>
-        <Icon size={24} className="text-white" />
-      </div>
-    </div>
-  </div>
-);
+  const kpiData = [
+    {
+      title: "Total Revenue",
+      value: "$124,500",
+      icon: <DollarSign size={22} />,
+    },
+    {
+      title: "Orders",
+      value: "1,432",
+      icon: <ShoppingCart size={22} />,
+    },
+    {
+      title: "Products",
+      value: "3,204",
+      icon: <Package size={22} />,
+    },
+    {
+      title: "Avg Order Value",
+      value: "$86.94",
+      icon: <TrendingUp size={22} />,
+    },
+  ];
 
-const CaseCard = ({ caseItem }) => {
-  const [showDetails, setShowDetails] = useState(false);
-  
-  return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-      <div className="relative h-48 overflow-hidden">
-        <img 
-          src={caseItem.image} 
-          alt={caseItem.name}
-          className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-        />
-        <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1 text-xs font-semibold text-gray-700">
-          ⭐ {caseItem.rating}
-        </div>
-      </div>
-      <div className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <div>
-            <h3 className="font-bold text-gray-800">{caseItem.name}</h3>
-            <p className="text-sm text-gray-500">{caseItem.brand}</p>
-          </div>
-          <span className="text-lg font-bold text-blue-600">${caseItem.price}</span>
-        </div>
-        
-        <div className="flex justify-between items-center text-sm text-gray-600 mb-3">
-          <span className="flex items-center gap-1"><Package size={14}/> Stock: {caseItem.stock}</span>
-          <span className="flex items-center gap-1"><ShoppingBag size={14}/> Sold: {caseItem.sold}</span>
-        </div>
-        
-        <button 
-          onClick={() => setShowDetails(!showDetails)}
-          className="w-full mt-2 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
-        >
-          <Eye size={16}/> {showDetails ? "Hide Details" : "View Details"}
-        </button>
-        
-        {showDetails && (
-          <div className="mt-3 p-3 bg-gray-50 rounded-lg text-sm space-y-1 animate-fadeIn">
-            <p><span className="font-medium">Color:</span> {caseItem.color}</p>
-            <p><span className="font-medium">Material:</span> {caseItem.material}</p>
-            <p><span className="font-medium">Revenue:</span> ${(caseItem.sold * caseItem.price).toFixed(2)}</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const AdminPanel = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("default");
-  
-  const filteredCases = initialCases.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.brand.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  const sortedCases = [...filteredCases].sort((a, b) => {
-    if (sortBy === "price-asc") return a.price - b.price;
-    if (sortBy === "price-desc") return b.price - a.price;
-    if (sortBy === "sold") return b.sold - a.sold;
-    if (sortBy === "stock") return b.stock - a.stock;
-    return 0;
-  });
+  const categories = [
+    "iPhone Cases",
+    "Screen Protectors",
+    "Power & Charging",
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white shadow-lg sticky top-0 z-10">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
+    <div className="flex min-h-screen bg-gray-100">
+      <Sidebar />
+
+      <div className="md:ml-60 flex-1">
+        <header className="sticky top-0 z-20 bg-white border-b h-16 px-4 flex items-center justify-between shadow-sm">
+          <div className="relative">
+            <Search
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+
+            <input
+              type="text"
+              placeholder="Search inventory..."
+              className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Bell size={20} className="cursor-pointer text-gray-600" />
+            <Settings size={20} className="cursor-pointer text-gray-600" />
+
+            <img
+              src="https://i.pravatar.cc/40"
+              alt="profile"
+              className="w-10 h-10 rounded-full border"
+            />
+          </div>
+        </header>
+
+        <div className="p-6 space-y-8">
+          <div className="flex justify-between">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Admin Panel - Case Dashboard</h1>
-              <p className="text-blue-200 text-sm mt-1">Manage & track your phone case inventory</p>
+              <h2 className="text-3xl font-bold">Dashboard</h2>
+              <p className="text-gray-500 mt-1">
+                Welcome back. Here's what's happening today.
+              </p>
             </div>
-            <button className="bg-white/20 hover:bg-white/30 transition-colors px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium">
-              <Plus size={18}/> Add New Case
+
+            <button className="bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-800">
+              <Plus size={18} />
+              Add Product
             </button>
           </div>
-        </div>
-      </header>
-      
-      <main className="container mx-auto px-6 py-8">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard title="Total Cases" value={totalCases} icon={Package} color="bg-blue-500" trend="12" />
-          <StatCard title="Total Sales" value={totalSales} icon={ShoppingBag} color="bg-green-500" trend="8" />
-          <StatCard title="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon={TrendingUp} color="bg-purple-500" trend="15" />
-          <StatCard title="Average Price" value={`$${averagePrice}`} icon={Users} color="bg-orange-500" />
-        </div>
-        
-        {/* Filters & Search */}
-        <div className="bg-white rounded-xl shadow-md p-4 mb-8 flex flex-wrap gap-4 items-center justify-between">
-          <div className="flex items-center gap-2 flex-1 max-w-md">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18}/>
-              <input
-                type="text"
-                placeholder="Search by name or brand..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+            {kpiData.map((item, index) => (
+              <div
+                key={index}
+                className="bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition"
+              >
+                <div className="flex justify-between items-center">
+                  <p className="text-sm text-gray-500">{item.title}</p>
+
+                  <div className="text-blue-700">{item.icon}</div>
+                </div>
+
+                <h3 className="text-3xl font-bold mt-4">{item.value}</h3>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-white p-6 rounded-xl border shadow-sm">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-semibold">
+                Revenue Analytics
+              </h3>
+
+              <select className="border rounded-lg px-3 py-2">
+                <option>Last 6 Months</option>
+              </select>
+            </div>
+
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={revenueData}>
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Bar
+                  dataKey="revenue"
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-2xl font-semibold">
+                Primary Categories
+              </h3>
+
+              <button className="text-blue-700 font-medium">
+                View All
+              </button>
+            </div>
+
+            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {categories.map((category, index) => (
+                <div
+                  key={index}
+                  className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition"
+                >
+                  <img
+                    src={`https://picsum.photos/400/250?random=${index}`}
+                    alt={category}
+                    className="w-full h-52 object-cover"
+                  />
+
+                  <div className="p-4">
+                    <h4 className="text-xl font-semibold">
+                      {category}
+                    </h4>
+
+                    <p className="text-gray-500 mt-2 text-sm">
+                      Manage products under this category.
+                    </p>
+
+                    <button className="mt-4 w-full border border-blue-700 text-blue-700 py-2 rounded-lg hover:bg-blue-700 hover:text-white transition">
+                      Manage Category
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Filter size={18} className="text-gray-500"/>
-            <select 
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="default">Sort by: Default</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
-              <option value="sold">Most Sold</option>
-              <option value="stock">Most Stock</option>
-            </select>
-          </div>
+
         </div>
-        
-        {/* Cases Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {sortedCases.map(caseItem => (
-            <CaseCard key={caseItem.id} caseItem={caseItem} />
-          ))}
-        </div>
-        
-        {sortedCases.length === 0 && (
-          <div className="text-center py-16 bg-white rounded-xl shadow">
-            <Package size={48} className="mx-auto text-gray-400 mb-4"/>
-            <p className="text-gray-500 text-lg">No cases found matching your search.</p>
-          </div>
-        )}
-      </main>
-      
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-      `}</style>
+      </div>
     </div>
   );
-};
+}
 
 export default AdminPanel;
