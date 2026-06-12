@@ -61,13 +61,11 @@ function AdminPanel() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
       <Sidebar />
 
-      {/* Main Content */}
-      <div className=" md:ml-60">
-        {/* Header */}
-<header className="sticky top-0 z-20 bg-white border-b h-16 px-4 flex items-center justify-between shadow-sm">          <div className="relative">
+      <div className="md:ml-60 flex-1">
+        <header className="sticky top-0 z-20 bg-white border-b h-16 px-4 flex items-center justify-between shadow-sm">
+          <div className="relative">
             <Search
               size={18}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -81,15 +79,8 @@ function AdminPanel() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Bell
-              size={20}
-              className="cursor-pointer text-gray-600"
-            />
-
-            <Settings
-              size={20}
-              className="cursor-pointer text-gray-600"
-            />
+            <Bell size={20} className="cursor-pointer text-gray-600" />
+            <Settings size={20} className="cursor-pointer text-gray-600" />
 
             <img
               src="https://i.pravatar.cc/40"
@@ -99,15 +90,10 @@ function AdminPanel() {
           </div>
         </header>
 
-        {/* Page Content */}
         <div className="p-6 space-y-8">
-          {/* Dashboard Header */}
-          <div className="flex justify-between ">
+          <div className="flex justify-between">
             <div>
-              <h2 className="text-3xl font-bold">
-                Dashboard
-              </h2>
-
+              <h2 className="text-3xl font-bold">Dashboard</h2>
               <p className="text-gray-500 mt-1">
                 Welcome back. Here's what's happening today.
               </p>
@@ -119,7 +105,6 @@ function AdminPanel() {
             </button>
           </div>
 
-          {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
             {kpiData.map((item, index) => (
               <div
@@ -127,23 +112,16 @@ function AdminPanel() {
                 className="bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition"
               >
                 <div className="flex justify-between items-center">
-                  <p className="text-sm text-gray-500">
-                    {item.title}
-                  </p>
+                  <p className="text-sm text-gray-500">{item.title}</p>
 
-                  <div className="text-blue-700">
-                    {item.icon}
-                  </div>
+                  <div className="text-blue-700">{item.icon}</div>
                 </div>
 
-                <h3 className="text-3xl font-bold mt-4">
-                  {item.value}
-                </h3>
+                <h3 className="text-3xl font-bold mt-4">{item.value}</h3>
               </div>
             ))}
           </div>
 
-          {/* Revenue Analytics */}
           <div className="bg-white p-6 rounded-xl border shadow-sm">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-semibold">
@@ -155,10 +133,7 @@ function AdminPanel() {
               </select>
             </div>
 
-            <ResponsiveContainer
-              width="100%"
-              height={300}
-            >
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart data={revenueData}>
                 <XAxis dataKey="month" />
                 <YAxis />
@@ -171,7 +146,6 @@ function AdminPanel() {
             </ResponsiveContainer>
           </div>
 
-          {/* Categories */}
           <div>
             <div className="flex justify-between items-center mb-5">
               <h3 className="text-2xl font-semibold">
