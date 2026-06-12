@@ -1,103 +1,220 @@
-import React from 'react';
+import React from "react";
+import {
+  Plus,
+  Bell,
+  Settings,
+  Search,
+  DollarSign,
+  ShoppingCart,
+  Package,
+  TrendingUp,
+} from "lucide-react";
+import Sidebar from "./Sidebar";
+
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
 
 function AdminPanel() {
-  // Sample data for the cards
-  const items = [
+  const revenueData = [
+    { month: "Jan", revenue: 4000 },
+    { month: "Feb", revenue: 3000 },
+    { month: "Mar", revenue: 5000 },
+    { month: "Apr", revenue: 4500 },
+    { month: "May", revenue: 6000 },
+    { month: "Jun", revenue: 5500 },
+  ];
+
+  const kpiData = [
     {
-      id: 1,
-      name: "iPhone 15 Pro Matte Case",
-      price: "₹1,299",
-      screenType: "6.1-inch OLED",
-      image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500&auto=format&fit=crop&q=60"
+      title: "Total Revenue",
+      value: "$124,500",
+      icon: <DollarSign size={22} />,
     },
     {
-      id: 2,
-      name: "Samsung S24 Ultra Clear Case",
-      price: "₹999",
-      screenType: "6.8-inch AMOLED",
-      image: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=500&auto=format&fit=crop&q=60"
+      title: "Orders",
+      value: "1,432",
+      icon: <ShoppingCart size={22} />,
     },
     {
-      id: 3,
-      name: "Pixel 8 Pro Leather Case",
-      price: "₹1,499",
-      screenType: "6.7-inch Super Actua",
-      image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&auto=format&fit=crop&q=60"
-    }
+      title: "Products",
+      value: "3,204",
+      icon: <Package size={22} />,
+    },
+    {
+      title: "Avg Order Value",
+      value: "$86.94",
+      icon: <TrendingUp size={22} />,
+    },
+  ];
+
+  const categories = [
+    "iPhone Cases",
+    "Screen Protectors",
+    "Power & Charging",
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 text-gray-800 font-sans">
-      
-      {/* Header Area */}
-      <header className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200 pb-5">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Admin Dashboard
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">Manage your premium cases, screen specifications, and pricing.</p>
-        </div>
-        <button className="self-start md:self-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all shadow-lg shadow-blue-500/10 active:scale-95 text-sm">
-          + Add New Case
-        </button>
-      </header>
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar */}
+      <Sidebar />
 
-      {/* Main Grid for Cards */}
-      <main className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {items.map((item) => (
-          <div 
-            key={item.id} 
-            className="group relative rounded-2xl border border-gray-200/80 bg-white/70 backdrop-blur-md overflow-hidden hover:border-blue-500/50 hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 flex flex-col shadow-sm"
-          >
-            {/* Case Photo */}
-            <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
-              <img 
-                src={item.image} 
-                alt={item.name} 
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
-                <span className="text-xs font-medium bg-white/90 text-gray-800 backdrop-blur-md px-2.5 py-1 rounded-md shadow-sm">
-                  Click to Edit Image
-                </span>
-              </div>
+      {/* Main Content */}
+      <div className=" md:ml-60">
+        {/* Header */}
+<header className="sticky top-0 z-20 bg-white border-b h-16 px-4 flex items-center justify-between shadow-sm">          <div className="relative">
+            <Search
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+
+            <input
+              type="text"
+              placeholder="Search inventory..."
+              className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Bell
+              size={20}
+              className="cursor-pointer text-gray-600"
+            />
+
+            <Settings
+              size={20}
+              className="cursor-pointer text-gray-600"
+            />
+
+            <img
+              src="https://i.pravatar.cc/40"
+              alt="profile"
+              className="w-10 h-10 rounded-full border"
+            />
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <div className="p-6 space-y-8">
+          {/* Dashboard Header */}
+          <div className="flex justify-between ">
+            <div>
+              <h2 className="text-3xl font-bold">
+                Dashboard
+              </h2>
+
+              <p className="text-gray-500 mt-1">
+                Welcome back. Here's what's happening today.
+              </p>
             </div>
 
-            {/* Card Content */}
-            <div className="p-5 flex flex-col flex-grow justify-between">
-              <div>
-                <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
-                  {item.name}
-                </h3>
-                
-                {/* Specs Section */}
-                <div className="mt-4 space-y-2.5">
-                  <div className="flex items-center justify-between text-sm border-b border-gray-100 pb-2">
-                    <span className="text-gray-500">Price:</span>
-                    <span className="font-bold text-emerald-600 text-base">{item.price}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">Screen Size:</span>
-                    <span className="font-medium text-gray-700 bg-gray-100 px-2 py-0.5 rounded text-xs">
-                      {item.screenType}
-                    </span>
+            <button className="bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-800">
+              <Plus size={18} />
+              Add Product
+            </button>
+          </div>
+
+          {/* KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+            {kpiData.map((item, index) => (
+              <div
+                key={index}
+                className="bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition"
+              >
+                <div className="flex justify-between items-center">
+                  <p className="text-sm text-gray-500">
+                    {item.title}
+                  </p>
+
+                  <div className="text-blue-700">
+                    {item.icon}
                   </div>
                 </div>
-              </div>
 
-              {/* Action Buttons inside Card */}
-              <div className="mt-6 grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
-                <button className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors text-center">
-                  Edit Details
-                </button>
-                <button className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium rounded-lg transition-colors text-center">
-                  Delete
-                </button>
+                <h3 className="text-3xl font-bold mt-4">
+                  {item.value}
+                </h3>
               </div>
+            ))}
+          </div>
+
+          {/* Revenue Analytics */}
+          <div className="bg-white p-6 rounded-xl border shadow-sm">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-semibold">
+                Revenue Analytics
+              </h3>
+
+              <select className="border rounded-lg px-3 py-2">
+                <option>Last 6 Months</option>
+              </select>
+            </div>
+
+            <ResponsiveContainer
+              width="100%"
+              height={300}
+            >
+              <BarChart data={revenueData}>
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Bar
+                  dataKey="revenue"
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Categories */}
+          <div>
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-2xl font-semibold">
+                Primary Categories
+              </h3>
+
+              <button className="text-blue-700 font-medium">
+                View All
+              </button>
+            </div>
+
+            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {categories.map((category, index) => (
+                <div
+                  key={index}
+                  className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition"
+                >
+                  <img
+                    src={`https://picsum.photos/400/250?random=${index}`}
+                    alt={category}
+                    className="w-full h-52 object-cover"
+                  />
+
+                  <div className="p-4">
+                    <h4 className="text-xl font-semibold">
+                      {category}
+                    </h4>
+
+                    <p className="text-gray-500 mt-2 text-sm">
+                      Manage products under this category.
+                    </p>
+
+                    <button className="mt-4 w-full border border-blue-700 text-blue-700 py-2 rounded-lg hover:bg-blue-700 hover:text-white transition">
+                      Manage Category
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        ))}
-      </main>
+
+        </div>
+      </div>
     </div>
   );
 }
