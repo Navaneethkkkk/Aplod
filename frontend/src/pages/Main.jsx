@@ -13,7 +13,10 @@ import {
   Shield,
   Truck,
   RotateCcw,
+  ArrowRight,
+  Sparkles,
 } from 'lucide-react';
+import heroBg from '../assets/hero-bg.webp';
 
 function Main() {
   // Available iPhone Models
@@ -372,13 +375,66 @@ function Main() {
         </div>
       </header>
 
-      <div className="bg-neutral-50 border-b border-neutral-100 py-3">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center space-x-2">
-          
-          
-            
+      <section
+        className="relative overflow-hidden border-b border-neutral-200 bg-cover bg-center"
+        style={{
+          backgroundImage: `linear-gradient(90deg, rgba(249, 250, 251, 0.98) 0%, rgba(249, 250, 251, 0.9) 42%, rgba(249, 250, 251, 0.25) 72%, rgba(249, 250, 251, 0.05) 100%), url(${heroBg})`,
+        }}
+      >
+        <div className="absolute inset-x-0 top-0 h-px bg-white/80" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-80px)] py-16 sm:py-20 lg:py-24 grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-10 lg:gap-14 items-center">
+          <div className="relative z-10 max-w-2xl animate-hero-copy">
+            <div className="inline-flex items-center gap-2 rounded-full border border-neutral-900/10 bg-white/70 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-700 shadow-sm">
+              <Sparkles size={13} />
+              New case collections
+            </div>
+
+            <h1 className="mt-6 text-4xl sm:text-6xl lg:text-7xl font-black uppercase leading-[0.95] text-neutral-950">
+              Armor that still looks premium.
+            </h1>
+
+            <p className="mt-6 max-w-xl text-sm sm:text-base leading-7 text-neutral-600">
+              Drop-tested iPhone cases with clean camera protection, soft-touch grip, and daily-carry finishes made for
+              the latest Pro models.
+            </p>
+
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <a
+                href="#products"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-neutral-950 px-6 text-xs font-black uppercase tracking-wider text-white transition hover:bg-neutral-800"
+              >
+                Shop Cases
+                <ArrowRight size={16} />
+              </a>
+              <button
+                onClick={() => triggerToast('Premium case bundle preview is ready below.')}
+                className="inline-flex h-12 items-center justify-center rounded-full border border-neutral-300 bg-white/70 px-6 text-xs font-black uppercase tracking-wider text-neutral-900 transition hover:border-neutral-950"
+              >
+                View Bundle
+              </button>
+            </div>
+
+            <div className="mt-10 grid grid-cols-3 gap-4 border-t border-neutral-900/10 pt-6 text-neutral-900">
+              <div>
+                <p className="text-2xl font-black">9H</p>
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-neutral-500">Camera lip</p>
+              </div>
+              <div>
+                <p className="text-2xl font-black">2M</p>
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-neutral-500">Drop tested</p>
+              </div>
+              <div>
+                <p className="text-2xl font-black">48H</p>
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-neutral-500">Dispatch</p>
+              </div>
+            </div>
           </div>
+          <div className="hidden min-h-[520px] lg:block" aria-hidden="true" />
+        </div>
+      </section>
+
+      <main id="products" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 scroll-mt-24 product-scroll-reveal">
+        <div className="mb-8 flex justify-center sm:justify-end">
           <div className="flex items-center space-x-2">
             <span className="text-xs text-neutral-400 font-medium">Change Device:</span>
             <select
@@ -400,9 +456,7 @@ function Main() {
             </select>
           </div>
         </div>
-      </div>
 
-      <main id="explore" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex justify-center mb-12">
           <div className="inline-flex bg-[#f4f4f4] p-1.5 rounded-full border border-neutral-200/40">
             <button
@@ -884,4 +938,3 @@ function Main() {
 }
 
 export default Main;
-

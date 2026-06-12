@@ -1,0 +1,85 @@
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-copy {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes product-reveal {
+  from {
+    opacity: 0.35;
+    transform: translateY(42px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 220ms ease-out both;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 260ms ease-out both;
+}
+
+.animate-hero-copy {
+  animation: hero-copy 760ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.product-scroll-reveal {
+  animation: product-reveal 800ms ease-out both;
+}
+
+@supports (animation-timeline: view()) {
+  .product-scroll-reveal {
+    animation-timeline: view();
+    animation-range: entry 0% cover 26%;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
