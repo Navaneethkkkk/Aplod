@@ -7,8 +7,12 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 function Sidebar() {
+
+const navigiate =useNavigate()
+
   return (
     <aside className="w-56 h-screen bg-white border-r flex flex-col justify-between">
       <div>
@@ -27,17 +31,23 @@ function Sidebar() {
         </div>
 
         <nav className="mt-6 px-4 space-y-2">
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100">
+          <button
+          onClick={()=> navigiate("/adminpanel")}
+           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100">
             <LayoutDashboard size={18} />
             Dashboard
           </button>
 
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold">
+          <button
+          onClick={()=>navigiate("/product")}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl ">
             <Plus size={18} />
             Add Product
           </button>
 
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100">
+          <button
+          onClick={()=>navigiate("/order")}
+           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100">
             <ShoppingCart size={18} />
             Orders
           </button>
@@ -55,7 +65,9 @@ function Sidebar() {
           Settings
         </button>
 
-        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100">
+        <button
+        onClick={()=>navigiate("/login")}
+        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100">
           <LogOut size={18} />
           Logout
         </button>
