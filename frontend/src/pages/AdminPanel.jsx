@@ -1,5 +1,5 @@
 import React from "react";
-import { DollarSign, ShoppingCart, Package, TrendingUp } from "lucide-react";
+import { IndianRupee, ShoppingCart, Package, TrendingUp } from "lucide-react";
 
 import Sidebar from "./Sidebar";
 
@@ -17,22 +17,29 @@ import { useAdminTheme } from "../context/AdminThemeContext";
 
 function AdminPanel() {
   const { isDark } = useAdminTheme();
+  const formatIndianCurrency = (amount) =>
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(amount);
+
   const revenueData = [
-    { month: "Jan", revenue: 4000 },
-    { month: "Feb", revenue: 3000 },
-    { month: "Mar", revenue: 5000 },
-    { month: "Apr", revenue: 4500 },
-    { month: "May", revenue: 6000 },
-    { month: "Jun", revenue: 5500 },
+    { month: "Jan", revenue: 400000 },
+    { month: "Feb", revenue: 300000 },
+    { month: "Mar", revenue: 500000 },
+    { month: "Apr", revenue: 450000 },
+    { month: "May", revenue: 600000 },
+    { month: "Jun", revenue: 550000 },
   ];
 
   const kpiData = [
     {
       title: "Total Revenue",
-      value: "$124,500",
+      value: formatIndianCurrency(124500),
       change: "+12.3%",
       isPositive: true,
-      icon: <DollarSign size={20} />,
+      icon: <IndianRupee size={20} />,
     },
     {
       title: "Orders Filed",
@@ -50,7 +57,7 @@ function AdminPanel() {
     },
     {
       title: "Avg Order Value",
-      value: "$86.94",
+      value: formatIndianCurrency(8694),
       change: "+4.1%",
       isPositive: true,
       icon: <TrendingUp size={20} />,
@@ -154,9 +161,13 @@ function AdminPanel() {
 
                   <XAxis dataKey="month" axisLine={false} tickLine={false} />
 
-                  <YAxis axisLine={false} tickLine={false} />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(value) => `₹${Number(value / 100000).toLocaleString("en-IN")}L`}
+                  />
 
-                  <Tooltip />
+                  <Tooltip formatter={(value) => [formatIndianCurrency(value), "Revenue"]} />
 
                   <Bar
                     dataKey="revenue"
