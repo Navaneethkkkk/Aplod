@@ -2,6 +2,8 @@ import React from "react";
 import { Image } from "lucide-react";
 import { useAdminTheme } from "../context/AdminThemeContext";
 
+const isVideoMedia = (media) => typeof media === "string" && media.startsWith("data:video");
+
 function ProductPreview({ product = {} }) {
   const { isDark } = useAdminTheme();
   const images = product.images?.length ? product.images : product.imageUrl ? [product.imageUrl] : [];
@@ -20,7 +22,14 @@ function ProductPreview({ product = {} }) {
 
       <div className="p-4">
         <div className={`h-44 sm:h-48 border rounded-2xl flex items-center justify-center ${previewClass}`}>
-          {images[0] ? (
+          {isVideoMedia(images[0]) ? (
+            <video
+              src={images[0]}
+              controls
+              muted
+              className="h-full w-full rounded-2xl object-contain bg-black"
+            />
+          ) : images[0] ? (
             <img
               src={images[0]}
               alt={product.name || "Product preview"}
@@ -52,12 +61,21 @@ function ProductPreview({ product = {} }) {
         {images.length > 1 && (
           <div className="mt-4 grid grid-cols-4 gap-2">
             {images.map((image, index) => (
-              <img
-                key={image}
-                src={image}
-                alt={`Product photo ${index + 1}`}
-                className={`h-14 w-full rounded-lg object-cover border ${isDark ? "border-slate-800" : "border-slate-200"}`}
-              />
+              isVideoMedia(image) ? (
+                <video
+                  key={`${index}-${image.slice(0, 24)}`}
+                  src={image}
+                  muted
+                  className={`h-14 w-full rounded-lg object-cover border bg-black ${isDark ? "border-slate-800" : "border-slate-200"}`}
+                />
+              ) : (
+                <img
+                  key={`${index}-${image.slice(0, 24)}`}
+                  src={image}
+                  alt={`Product media ${index + 1}`}
+                  className={`h-14 w-full rounded-lg object-cover border ${isDark ? "border-slate-800" : "border-slate-200"}`}
+                />
+              )
             ))}
           </div>
         )}

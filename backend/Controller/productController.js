@@ -17,7 +17,7 @@ export const createProduct = async (req, res, next) => {
     const payload = {
       ...req.body,
       images: Array.isArray(req.body.images)
-        ? req.body.images.filter(Boolean).slice(0, 4)
+        ? req.body.images.filter(Boolean).slice(0, 12)
         : req.body.imageUrl
           ? [req.body.imageUrl]
           : [],
@@ -48,7 +48,7 @@ export const updateProduct = async (req, res, next) => {
     const payload = {
       ...req.body,
       images: Array.isArray(req.body.images)
-        ? req.body.images.filter(Boolean).slice(0, 4)
+        ? req.body.images.filter(Boolean).slice(0, 12)
         : req.body.imageUrl
           ? [req.body.imageUrl]
           : [],

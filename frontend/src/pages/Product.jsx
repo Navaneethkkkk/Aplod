@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Image, Loader2 } from "lucide-react";
+import { Image, Loader2, Video } from "lucide-react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import ProductPreview from "./ProductPreview";
@@ -11,6 +11,9 @@ const defaultCategories = [
   { name: "Samsung Covers", slug: "samsung-covers" },
   { name: "Tablet Accessories", slug: "tablet-accessories" },
 ];
+
+const MAX_MEDIA_FILES = 12;
+const isVideoMedia = (media) => typeof media === "string" && media.startsWith("data:video");
 
 function ProductForm() {
   const { isDark } = useAdminTheme();
@@ -87,12 +90,12 @@ function ProductForm() {
     status: "Active",
   };
 
-  const handleImageChange = async (event) => {
-    const remainingSlots = 4 - form.images.length;
+  const handleMediaChange = async (event) => {
+    const remainingSlots = MAX_MEDIA_FILES - form.images.length;
     const files = Array.from(event.target.files || []).slice(0, remainingSlots);
     if (!files.length) return;
 
-    const images = await Promise.all(
+    const media = await Promise.all(
       files.map(
         (file) =>
           new Promise((resolve) => {
@@ -104,13 +107,13 @@ function ProductForm() {
     );
 
     setForm((current) => {
-      const nextImages = [...current.images, ...images].slice(0, 4);
+      const nextImages = [...current.images, ...media].slice(0, MAX_MEDIA_FILES);
       return { ...current, images: nextImages, imageUrl: nextImages[0] || "" };
     });
     event.target.value = "";
   };
 
-  const removeImage = (indexToRemove) => {
+  const removeMedia = (indexToRemove) => {
     setForm((current) => {
       const nextImages = current.images.filter((_, index) => index !== indexToRemove);
       return { ...current, images: nextImages, imageUrl: nextImages[0] || "" };
@@ -145,8 +148,8 @@ function ProductForm() {
     setMessage("");
 
     try {
-      if (form.images.length < 3) {
-        setMessage("Please add at least 3 photos");
+      if (!form.images.length) {
+        setMessage("Please add at least 1 photo or video");
         setIsSaving(false);
         return;
       }
@@ -181,7 +184,7 @@ function ProductForm() {
           <div className="mb-6">
             <h2 className="text-2xl md:text-3xl font-bold">Add Product</h2>
             <p className={isDark ? "text-slate-400" : "text-slate-500"}>
-              Add product details, pricing, inventory, and up to 4 photos.
+              Add product details, pricing, inventory, photos, and videos.
             </p>
           </div>
 
@@ -257,13 +260,13 @@ function ProductForm() {
               </section>
 
               <section className={`rounded-2xl border p-5 ${cardClass}`}>
-                <h3 className="text-xl font-semibold mb-4">Product Photos</h3>
+                <h3 className="text-xl font-semibold mb-4">Product Media</h3>
 
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/*,video/*"
                   multiple
-                  onChange={handleImageChange}
+                  onChange={handleMediaChange}
                   className={`w-full border rounded-xl p-3 mb-3 outline-none focus:ring-2 focus:ring-indigo-500 ${inputClass}`}
                 />
 
@@ -271,17 +274,26 @@ function ProductForm() {
                   isDark ? "border-slate-800 bg-slate-900" : "border-slate-200"
                 }`}>
                   {form.images.length ? (
-                    <div className="grid grid-cols-2 gap-3 w-full">
-                      {form.images.map((image, index) => (
-                        <div key={image} className="relative h-32 sm:h-40 rounded-lg bg-white overflow-hidden">
-                          <img
-                            src={image}
-                            alt={`Preview ${index + 1}`}
-                            className="h-full w-full object-contain"
-                          />
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 w-full">
+                      {form.images.map((media, index) => (
+                        <div key={`${index}-${media.slice(0, 24)}`} className="relative h-32 sm:h-40 rounded-lg bg-white overflow-hidden">
+                          {isVideoMedia(media) ? (
+                            <video
+                              src={media}
+                              controls
+                              muted
+                              className="h-full w-full object-contain bg-black"
+                            />
+                          ) : (
+                            <img
+                              src={media}
+                              alt={`Preview ${index + 1}`}
+                              className="h-full w-full object-contain"
+                            />
+                          )}
                           <button
                             type="button"
-                            onClick={() => removeImage(index)}
+                            onClick={() => removeMedia(index)}
                             className="absolute top-2 right-2 rounded-full bg-black/75 px-2 py-1 text-xs font-bold text-white"
                           >
                             Remove
@@ -291,15 +303,18 @@ function ProductForm() {
                     </div>
                   ) : (
                     <>
-                      <Image size={44} className="text-gray-400" />
+                      <div className="flex items-center gap-3 text-gray-400">
+                        <Image size={44} />
+                        <Video size={44} />
+                      </div>
                       <p className={isDark ? "mt-2 text-slate-400" : "mt-2 text-gray-500"}>
-                        Upload 3 or 4 photos
+                        Upload photos or videos
                       </p>
                     </>
                   )}
                 </div>
                 <p className={isDark ? "mt-3 text-sm text-slate-400" : "mt-3 text-sm text-gray-500"}>
-                  {form.images.length}/4 photos added. Add minimum 3 photos.
+                  {form.images.length}/{MAX_MEDIA_FILES} media files added.
                 </p>
               </section>
 

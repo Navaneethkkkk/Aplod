@@ -42,8 +42,8 @@ const productSchema = new mongoose.Schema(
       type: [String],
       default: [],
       validate: {
-        validator: (value) => value.length <= 4,
-        message: "You can add up to 4 photos only",
+        validator: (value) => value.length <= 12,
+        message: "You can add up to 12 photos or videos only",
       },
     },
     status: {

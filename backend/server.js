@@ -9,7 +9,7 @@ import adminRoutes from "./routes/AdminRoutes.js";
 const app = express();
 const PORT = process.env.PORT || 6001;
 
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "50mb" }));
 
 app.use(
   cors({

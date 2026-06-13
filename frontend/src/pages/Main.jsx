@@ -18,7 +18,9 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { api } from '../api';
-import heroBg from '../assets/hero-bg.webp';
+import heroBg from '../assets/images_upscayl_16x_realesrgan-x4plus.png';
+
+const isVideoMedia = (media) => typeof media === 'string' && media.startsWith('data:video');
 
 function Main() {
   const navigate = useNavigate();
@@ -37,6 +39,7 @@ function Main() {
   // Custom interactive cart state
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [deliveryAddress, setDeliveryAddress] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [savedProducts, setSavedProducts] = useState([]);
@@ -296,6 +299,18 @@ function Main() {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0);
   }, [cart]);
 
+  const handleCheckout = () => {
+    if (!deliveryAddress.trim()) {
+      triggerToast('Please enter your delivery address.');
+      return;
+    }
+
+    triggerToast('Order placed successfully with your delivery address.');
+    setCart([]);
+    setDeliveryAddress('');
+    setIsCartOpen(false);
+  };
+
   const sendSupportMessage = (e) => {
     e.preventDefault();
     if (!whatsappMessage.trim()) return;
@@ -322,7 +337,7 @@ function Main() {
 
   const filteredProducts = useMemo(() => {
     const uploadedItems = savedProducts.filter((product) => product.categoryKey === activeCategory);
-    const categoryItems = [...uploadedItems, ...(productsData[activeCategory] || [])];
+    const categoryItems = uploadedItems;
     if (!searchQuery.trim()) return categoryItems;
     const q = searchQuery.toLowerCase();
     return categoryItems.filter((p) => p.title.toLowerCase().includes(q) || p.subtitle.toLowerCase().includes(q));
@@ -423,7 +438,8 @@ function Main() {
       <section
         className="relative overflow-hidden border-b border-neutral-200 bg-cover bg-center"
         style={{
-          backgroundImage: `linear-gradient(90deg, rgba(249, 250, 251, 0.98) 0%, rgba(249, 250, 251, 0.9) 42%, rgba(249, 250, 251, 0.25) 72%, rgba(249, 250, 251, 0.05) 100%), url(${heroBg})`,
+          backgroundImage: `linear-gradient(90deg, rgba(249, 250, 251, 0.98) 0%, rgba(249, 250, 251, 0.88) 38%, rgba(249, 250, 251, 0.35) 58%, rgba(249, 250, 251, 0.08) 100%), url(${heroBg})`,
+          backgroundPosition: 'center right',
         }}
       >
         <div className="absolute inset-x-0 top-0 h-px bg-white/80" />
@@ -580,7 +596,14 @@ function Main() {
                 >
                   <div className="bg-[#f5f5f7] rounded-[20px] h-72 flex items-center justify-center p-6 relative overflow-hidden group-hover:bg-[#f0f0f2] transition duration-300">
                     <div className="w-full h-full max-h-[220px] transition-all duration-500 transform group-hover:scale-105">
-                      {product.coverImage && (
+                      {isVideoMedia(product.coverImage) ? (
+                        <video
+                          src={product.coverImage}
+                          muted
+                          playsInline
+                          className="h-full w-full object-contain"
+                        />
+                      ) : product.coverImage && (
                         <img
                           src={product.coverImage}
                           alt={product.title}
@@ -889,6 +912,19 @@ function Main() {
 
                   {cart.length > 0 && (
                     <div className="border-t border-neutral-150 px-6 py-6 bg-neutral-50">
+                      <div className="mb-5">
+                        <label className="block text-[11px] font-black uppercase tracking-wider text-neutral-700 mb-2">
+                          Delivery Address
+                        </label>
+                        <textarea
+                          value={deliveryAddress}
+                          onChange={(event) => setDeliveryAddress(event.target.value)}
+                          rows={3}
+                          placeholder="House name, street, city, PIN code"
+                          className="w-full resize-none rounded-xl border border-neutral-200 bg-white p-3 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 placeholder:text-neutral-400"
+                        />
+                      </div>
+
                       <div className="space-y-2 mb-6 text-xs">
                         <div className="flex justify-between text-neutral-400">
                           <span>Subtotal</span>
@@ -905,11 +941,7 @@ function Main() {
                       </div>
 
                       <button
-                        onClick={() => {
-                          triggerToast('Secure checkout complete! Thank you for simulating with CaseGear.');
-                          setCart([]);
-                          setIsCartOpen(false);
-                        }}
+                        onClick={handleCheckout}
                         className="w-full bg-black hover:bg-neutral-800 text-white py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition duration-150"
                       >
                         Secure Checkout (₹{cartSubtotal.toLocaleString('en-IN')})
