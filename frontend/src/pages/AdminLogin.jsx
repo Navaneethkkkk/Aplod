@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import Swal from "sweetalert2";
+import { api } from "../api";
+import { useNavigate } from "react-router-dom";
 import {
   Lock,
   Mail,
@@ -19,29 +22,53 @@ function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const adminCredentials = {
-    email: "admin@gmail.com",
-    password: "admin123",
-  };
+ 
+  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async(e) => {
     e.preventDefault();
+
+
 
     setLoading(true);
     setMessage("");
 
-    setTimeout(() => {
-      if (
-        email === adminCredentials.email &&
-        password === adminCredentials.password
-      ) {
-        setMessage("Login Successful");
-      } else {
-        setMessage("Invalid Email or Password");
-      }
+  try {
+   const response = await api.login({
+  email,
+  password,
+});
 
-      setLoading(false);
-    }, 1500);
+if (response.success) {
+  await Swal.fire({
+    icon: "success",
+    title: "Login Successful",
+    text: "Welcome Admin!",
+    timer: 2000,
+    showConfirmButton: false,
+  });
+
+  navigate("/adminpanel");
+}else {
+      Swal.fire({
+        icon: "error",
+        title: "Login Failed",
+        text: response.data.message,
+      });
+    }
+   
+  }catch (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Oops...",
+      text:
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.",
+    });
+  } finally {
+    setLoading(false);
+  }
+
   };
 
   return (
