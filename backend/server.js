@@ -4,6 +4,7 @@ import connectionDB from "./Database/Connection.js";
 import categoryRoutes from "./Routes/categoryRoutes.js";
 import productRoutes from "./Routes/productRoutes.js";
 import orderRoutes from "./Routes/orderRoutes.js";
+import adminRoutes from "./routes/AdminRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 6001;
@@ -30,6 +31,7 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", service: "aplod-backend" });
 });
 
+app.use("/api/admin", adminRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
