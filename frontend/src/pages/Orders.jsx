@@ -11,57 +11,25 @@ import Header from "./Header";
 import { useAdminTheme } from "../context/AdminThemeContext";
 import { api } from "../api";
 
-const fallbackOrders = [
-  {
-    _id: "1",
-    orderNumber: "#ORD-001",
-    customerName: "Rajesh Kumar",
-    productName: "iPhone 14 Pro Case - Black",
-    createdAt: "2023-10-24",
-    totalAmount: 1499,
-    status: "Pending",
-  },
-  {
-    _id: "2",
-    orderNumber: "#ORD-002",
-    customerName: "Priya Sharma",
-    productName: "Samsung S23 Ultra Clear Case",
-    createdAt: "2023-10-23",
-    totalAmount: 999,
-    status: "Shipped",
-  },
-  {
-    _id: "3",
-    orderNumber: "#ORD-003",
-    customerName: "Amit Singh",
-    productName: "Pixel 7 Leather Cover - Brown",
-    createdAt: "2023-10-22",
-    totalAmount: 2499,
-    status: "Delivered",
-  },
-  {
-    _id: "4",
-    orderNumber: "#ORD-004",
-    customerName: "Neha Gupta",
-    productName: "OnePlus 11 Silicone Case - Red",
-    createdAt: "2023-10-21",
-    totalAmount: 799,
-    status: "Cancelled",
-  },
-];
-
 export default function Orders() {
   const { isDark } = useAdminTheme();
-  const [orders, setOrders] = useState(fallbackOrders);
+  const [orders, setOrders] = useState([]);
   const [notice, setNotice] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
+    const localOrders = JSON.parse(localStorage.getItem("aplodOrders") || "[]");
+    if (localOrders.length) setOrders(localOrders);
+
     api
       .getOrders()
       .then((data) => {
-        if (data.length) setOrders(data);
+        setOrders([...data, ...localOrders]);
       })
-      .catch(() => setNotice("Showing sample orders until backend database connects."));
+      .catch(() => {
+        if (!localOrders.length) setOrders([]);
+        setNotice("Orders from this browser will show here until the database connects.");
+      });
   }, []);
 
   const getStatusStyles = (status) => {
@@ -91,6 +59,10 @@ export default function Orders() {
 
   const getProductName = (order) => {
     return order.productName || order.items?.[0]?.name || "Product";
+  };
+
+  const getItemsCount = (order) => {
+    return order.items?.reduce((total, item) => total + Number(item.quantity || 0), 0) || 0;
   };
 
   const updateStatus = async (id, status) => {
@@ -180,8 +152,12 @@ export default function Orders() {
                         </select>
                       </td>
                       <td className="px-6 py-4">
-                        <button>
+                        <button
+                          onClick={() => setSelectedOrder(order)}
+                          className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${buttonClass}`}
+                        >
                           <MoreVertical size={18} />
+                          Details
                         </button>
                       </td>
                     </tr>
@@ -216,9 +192,24 @@ export default function Orders() {
                     <span>{new Date(order.createdAt).toLocaleDateString()}</span>
                     <strong>₹{Number(order.totalAmount).toLocaleString("en-IN")}</strong>
                   </div>
+                  <button
+                    onClick={() => setSelectedOrder(order)}
+                    className={`mt-4 w-full border px-4 py-2 rounded-lg text-sm font-semibold ${buttonClass}`}
+                  >
+                    View details
+                  </button>
                 </article>
               ))}
             </div>
+
+            {orders.length === 0 && (
+              <div className="px-6 py-16 text-center">
+                <h3 className="text-lg font-semibold">No orders yet</h3>
+                <p className={isDark ? "mt-2 text-sm text-slate-400" : "mt-2 text-sm text-slate-500"}>
+                  New customer orders will appear here with their delivery details.
+                </p>
+              </div>
+            )}
 
             <div className={`border-t px-4 md:px-6 py-4 flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center ${
               isDark ? "border-slate-800" : "border-slate-100"
@@ -238,6 +229,66 @@ export default function Orders() {
               </div>
             </div>
           </section>
+
+          {selectedOrder && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+              <div className={`w-full max-w-2xl rounded-2xl border p-6 shadow-xl ${panelClass}`}>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-blue-600">{selectedOrder.orderNumber}</p>
+                    <h3 className="mt-1 text-xl font-bold">{selectedOrder.customerName}</h3>
+                    <p className={isDark ? "text-sm text-slate-400" : "text-sm text-slate-500"}>
+                      {new Date(selectedOrder.createdAt).toLocaleString()} · {getItemsCount(selectedOrder)} items
+                    </p>
+                  </div>
+                  <button onClick={() => setSelectedOrder(null)} className={`border px-3 py-2 rounded-lg ${buttonClass}`}>
+                    Close
+                  </button>
+                </div>
+
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  <div className={`rounded-xl border p-4 ${isDark ? "border-slate-800" : "border-slate-100"}`}>
+                    <h4 className="font-semibold">Delivery details</h4>
+                    <p className="mt-3 text-sm">{selectedOrder.address || "No address added"}</p>
+                    <p className={isDark ? "mt-3 text-sm text-slate-400" : "mt-3 text-sm text-slate-500"}>
+                      {selectedOrder.customerPhone || "No phone number"}
+                    </p>
+                  </div>
+
+                  <div className={`rounded-xl border p-4 ${isDark ? "border-slate-800" : "border-slate-100"}`}>
+                    <h4 className="font-semibold">Payment summary</h4>
+                    <div className="mt-3 flex justify-between text-sm">
+                      <span>Total</span>
+                      <strong>₹{Number(selectedOrder.totalAmount).toLocaleString("en-IN")}</strong>
+                    </div>
+                    <div className="mt-3 flex justify-between text-sm">
+                      <span>Status</span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusStyles(selectedOrder.status)}`}>
+                        {selectedOrder.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`mt-4 rounded-xl border p-4 ${isDark ? "border-slate-800" : "border-slate-100"}`}>
+                  <h4 className="font-semibold">Items</h4>
+                  <div className="mt-3 space-y-3">
+                    {selectedOrder.items?.map((item, index) => (
+                      <div key={`${item.name}-${index}`} className="flex items-center justify-between gap-4 text-sm">
+                        <div>
+                          <p className="font-medium">{item.name}</p>
+                          <p className={isDark ? "text-xs text-slate-400" : "text-xs text-slate-500"}>
+                            Qty {item.quantity} × ₹{Number(item.price).toLocaleString("en-IN")}
+                          </p>
+                        </div>
+                        <strong>₹{(Number(item.price) * Number(item.quantity)).toLocaleString("en-IN")}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>
