@@ -299,13 +299,45 @@ function Main() {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0);
   }, [cart]);
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!deliveryAddress.trim()) {
       triggerToast('Please enter your delivery address.');
       return;
     }
 
-    triggerToast('Order placed successfully with your delivery address.');
+    const orderPayload = {
+      customerName: 'Guest Customer',
+      customerPhone: '',
+      customerEmail: '',
+      address: deliveryAddress.trim(),
+      items: cart.map((item) => ({
+        name: `${item.title} - ${item.color.name} (${item.subtitle})`,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      totalAmount: cartSubtotal,
+      status: 'Pending',
+    };
+
+    try {
+      await api.createOrder(orderPayload);
+    } catch {
+      const localOrders = JSON.parse(localStorage.getItem('aplodOrders') || '[]');
+      localStorage.setItem(
+        'aplodOrders',
+        JSON.stringify([
+          {
+            ...orderPayload,
+            _id: `local-${Date.now()}`,
+            orderNumber: `ORD-${Date.now().toString().slice(-8)}`,
+            createdAt: new Date().toISOString(),
+          },
+          ...localOrders,
+        ])
+      );
+    }
+
+    triggerToast('Order placed successfully. Details are available in Orders.');
     setCart([]);
     setDeliveryAddress('');
     setIsCartOpen(false);

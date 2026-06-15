@@ -67,6 +67,12 @@ export const api = {
   // Orders
   getOrders: () => request("/orders"),
 
+  createOrder: (payload) =>
+    request("/orders", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
   updateOrderStatus: (id, status) =>
     request(`/orders/${id}`, {
       method: "PATCH",
