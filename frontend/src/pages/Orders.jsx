@@ -36,6 +36,10 @@ export default function Orders() {
     switch (status) {
       case "Pending":
         return "bg-amber-100 text-amber-700";
+      case "Confirmed":
+        return "bg-indigo-100 text-indigo-700";
+      case "Packed":
+        return "bg-purple-100 text-purple-700";
       case "Shipped":
         return "bg-blue-100 text-blue-700";
       case "Delivered":
@@ -60,6 +64,9 @@ export default function Orders() {
   const getProductName = (order) => {
     return order.productName || order.items?.[0]?.name || "Product";
   };
+
+  const getCustomerName = (order) => order.customer?.name || order.customerName || "Customer";
+  const getCustomerPhone = (order) => order.customer?.phone || order.customerPhone || "";
 
   const getItemsCount = (order) => {
     return order.items?.reduce((total, item) => total + Number(item.quantity || 0), 0) || 0;
@@ -131,7 +138,7 @@ export default function Orders() {
                       <td className="px-6 py-4 font-semibold text-blue-600">
                         {order.orderNumber}
                       </td>
-                      <td className="px-6 py-4">{order.customerName}</td>
+                      <td className="px-6 py-4">{getCustomerName(order)}</td>
                       <td className="px-6 py-4">{getProductName(order)}</td>
                       <td className="px-6 py-4">
                         {new Date(order.createdAt).toLocaleDateString()}
@@ -146,6 +153,8 @@ export default function Orders() {
                           className={`px-3 py-1 rounded-full text-xs font-semibold outline-none ${getStatusStyles(order.status)}`}
                         >
                           <option>Pending</option>
+                          <option>Confirmed</option>
+                          <option>Packed</option>
                           <option>Shipped</option>
                           <option>Delivered</option>
                           <option>Cancelled</option>
@@ -172,7 +181,7 @@ export default function Orders() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-semibold text-blue-600">{order.orderNumber}</p>
-                      <h3 className="font-semibold mt-1">{order.customerName}</h3>
+                      <h3 className="font-semibold mt-1">{getCustomerName(order)}</h3>
                       <p className={isDark ? "text-sm text-slate-400" : "text-sm text-slate-500"}>
                         {getProductName(order)}
                       </p>
@@ -183,6 +192,8 @@ export default function Orders() {
                       className={`px-3 py-1 rounded-full text-xs font-semibold outline-none ${getStatusStyles(order.status)}`}
                     >
                       <option>Pending</option>
+                      <option>Confirmed</option>
+                      <option>Packed</option>
                       <option>Shipped</option>
                       <option>Delivered</option>
                       <option>Cancelled</option>
@@ -236,7 +247,7 @@ export default function Orders() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold text-blue-600">{selectedOrder.orderNumber}</p>
-                    <h3 className="mt-1 text-xl font-bold">{selectedOrder.customerName}</h3>
+                    <h3 className="mt-1 text-xl font-bold">{getCustomerName(selectedOrder)}</h3>
                     <p className={isDark ? "text-sm text-slate-400" : "text-sm text-slate-500"}>
                       {new Date(selectedOrder.createdAt).toLocaleString()} · {getItemsCount(selectedOrder)} items
                     </p>
@@ -251,7 +262,7 @@ export default function Orders() {
                     <h4 className="font-semibold">Delivery details</h4>
                     <p className="mt-3 text-sm">{selectedOrder.address || "No address added"}</p>
                     <p className={isDark ? "mt-3 text-sm text-slate-400" : "mt-3 text-sm text-slate-500"}>
-                      {selectedOrder.customerPhone || "No phone number"}
+                      {getCustomerPhone(selectedOrder) || "No phone number"}
                     </p>
                   </div>
 
@@ -266,6 +277,10 @@ export default function Orders() {
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusStyles(selectedOrder.status)}`}>
                         {selectedOrder.status}
                       </span>
+                    </div>
+                    <div className="mt-3 flex justify-between text-sm">
+                      <span>Payment</span>
+                      <span>{selectedOrder.paymentMethod || "COD"} · {selectedOrder.paymentStatus || "Pending"}</span>
                     </div>
                   </div>
                 </div>

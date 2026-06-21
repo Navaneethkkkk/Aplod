@@ -18,9 +18,39 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { api } from '../api';
-import heroBg from '../assets/images_upscayl_16x_realesrgan-x4plus.png';
+import heroBg from '../assets/hero-bg.webp'
 
 const isVideoMedia = (media) => typeof media === 'string' && media.startsWith('data:video');
+
+const normalizeSavedProducts = (products) =>
+  products
+    .filter((product) => product.status !== 'Draft')
+    .map((product) => {
+      const categoryText = `${product.category?.name || ''} ${product.category?.slug || ''}`.toLowerCase();
+      const categoryKey = categoryText.includes('screen') || categoryText.includes('protector')
+        ? 'protectors'
+        : categoryText.includes('charg')
+          ? 'charging'
+          : 'cases';
+      const images = product.images?.length ? product.images : product.imageUrl ? [product.imageUrl] : [];
+
+      return {
+        id: product._id,
+        title: product.name,
+        subtitle: product.category?.name || 'Premium accessory',
+        rating: product.rating || 4.8,
+        reviewsCount: product.reviewsCount || 0,
+        price: product.price || 0,
+        mrp: product.compareAtPrice || null,
+        stock: product.stock ?? 0,
+        type: 'uploaded',
+        categoryKey,
+        coverImage: images[0] || '',
+        images,
+        description: product.description,
+        colors: [{ id: 'default', name: 'Default', hex: '#111111', secondary: '#333333' }],
+      };
+    });
 
 function Main() {
   const navigate = useNavigate();
@@ -37,9 +67,20 @@ function Main() {
   const [activeCategory, setActiveCategory] = useState('cases'); // 'cases', 'protectors', 'charging'
 
   // Custom interactive cart state
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('aplodCart') || '[]'));
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [checkoutForm, setCheckoutForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    line1: '',
+    line2: '',
+    city: '',
+    state: '',
+    pincode: '',
+    paymentMethod: 'COD',
+  });
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [savedProducts, setSavedProducts] = useState([]);
@@ -194,47 +235,22 @@ function Main() {
   };
 
   useEffect(() => {
-    const normalizeSavedProducts = (products) =>
-      products
-        .filter((product) => product.status !== 'Draft')
-        .map((product) => {
-          const categoryText = `${product.category?.name || ''} ${product.category?.slug || ''}`.toLowerCase();
-          const categoryKey = categoryText.includes('screen') || categoryText.includes('protector')
-            ? 'protectors'
-            : categoryText.includes('charg')
-              ? 'charging'
-              : 'cases';
-          const images = product.images?.length ? product.images : product.imageUrl ? [product.imageUrl] : [];
-
-          return {
-            id: product._id,
-            title: product.name,
-            subtitle: product.category?.name || 'Premium accessory',
-            rating: 4.8,
-            reviewsCount: 0,
-            price: product.price || 0,
-            mrp: null,
-            type: 'uploaded',
-            categoryKey,
-            coverImage: images[0] || '',
-            images,
-            description: product.description,
-            colors: [{ id: 'default', name: 'Default', hex: '#111111', secondary: '#333333' }],
-          };
-        });
-
     const localProducts = JSON.parse(localStorage.getItem('aplodProducts') || '[]');
     if (localProducts.length) {
       setSavedProducts(normalizeSavedProducts(localProducts));
     }
 
     api
-      .getProducts()
+      .getProducts({ status: 'Active' })
       .then((products) => {
         setSavedProducts(normalizeSavedProducts([...localProducts, ...products]));
       })
       .catch(() => setSavedProducts(normalizeSavedProducts(localProducts)));
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('aplodCart', JSON.stringify(cart));
+  }, [cart]);
 
   const triggerToast = (message) => {
     setToast({ show: true, message });
@@ -247,6 +263,11 @@ function Main() {
 
   const handleAddToCart = (product, e) => {
     if (e) e.stopPropagation();
+    if (product.stock <= 0) {
+      triggerToast('This product is currently out of stock.');
+      return;
+    }
+
     const chosenColor = selectedColors[product.id] || product.colors[0];
     const cartId = `${product.id}-${chosenColor.id}-${globalSelectedModel.id}`;
 
@@ -254,6 +275,10 @@ function Main() {
       const existingIndex = prevCart.findIndex((item) => item.cartId === cartId);
       if (existingIndex > -1) {
         const updated = [...prevCart];
+        if (updated[existingIndex].quantity >= product.stock) {
+          triggerToast(`Only ${product.stock} item(s) available in stock.`);
+          return updated;
+        }
         updated[existingIndex].quantity += 1;
         return updated;
       }
@@ -263,10 +288,15 @@ function Main() {
         {
           cartId,
           id: product.id,
+          product: product.id,
           title: product.title,
           subtitle: `Fits ${globalSelectedModel.name}`,
+          selectedModel: globalSelectedModel.name,
           color: chosenColor,
+          selectedColor: chosenColor.name,
           price: product.price,
+          image: product.coverImage || '',
+          stock: product.stock,
           quantity: 1,
           type: product.type,
         },
@@ -282,6 +312,10 @@ function Main() {
         .map((item) => {
           if (item.cartId === cartId) {
             const nextQty = item.quantity + delta;
+            if (nextQty > item.stock) {
+              triggerToast(`Only ${item.stock} item(s) available in stock.`);
+              return item;
+            }
             return nextQty > 0 ? { ...item, quantity: nextQty } : null;
           }
           return item;
@@ -299,48 +333,66 @@ function Main() {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0);
   }, [cart]);
 
+  const handleCheckoutField = (key, value) => {
+    setCheckoutForm((current) => ({ ...current, [key]: value }));
+  };
+
   const handleCheckout = async () => {
-    if (!deliveryAddress.trim()) {
-      triggerToast('Please enter your delivery address.');
+    const requiredFields = ['name', 'phone', 'line1', 'city', 'state', 'pincode'];
+    const missingField = requiredFields.find((field) => !checkoutForm[field].trim());
+
+    if (missingField) {
+      triggerToast('Please complete customer and delivery details.');
       return;
     }
 
-    const orderPayload = {
-      customerName: 'Guest Customer',
-      customerPhone: '',
-      customerEmail: '',
-      address: deliveryAddress.trim(),
-      items: cart.map((item) => ({
-        name: `${item.title} - ${item.color.name} (${item.subtitle})`,
-        quantity: item.quantity,
-        price: item.price,
-      })),
-      totalAmount: cartSubtotal,
-      status: 'Pending',
-    };
-
+    setIsPlacingOrder(true);
     try {
-      await api.createOrder(orderPayload);
-    } catch {
-      const localOrders = JSON.parse(localStorage.getItem('aplodOrders') || '[]');
-      localStorage.setItem(
-        'aplodOrders',
-        JSON.stringify([
-          {
-            ...orderPayload,
-            _id: `local-${Date.now()}`,
-            orderNumber: `ORD-${Date.now().toString().slice(-8)}`,
-            createdAt: new Date().toISOString(),
-          },
-          ...localOrders,
-        ])
-      );
-    }
+      const order = await api.createOrder({
+        customer: {
+          name: checkoutForm.name,
+          email: checkoutForm.email,
+          phone: checkoutForm.phone,
+        },
+        shippingAddress: {
+          line1: checkoutForm.line1,
+          line2: checkoutForm.line2,
+          city: checkoutForm.city,
+          state: checkoutForm.state,
+          pincode: checkoutForm.pincode,
+          country: 'India',
+        },
+        paymentMethod: checkoutForm.paymentMethod,
+        items: cart.map((item) => ({
+          product: item.product,
+          quantity: item.quantity,
+          selectedModel: item.selectedModel,
+          selectedColor: item.selectedColor,
+        })),
+      });
 
-    triggerToast('Order placed successfully. Details are available in Orders.');
-    setCart([]);
-    setDeliveryAddress('');
-    setIsCartOpen(false);
+      triggerToast(`Order ${order.orderNumber} placed successfully.`);
+      setCart([]);
+      setCheckoutForm({
+        name: '',
+        email: '',
+        phone: '',
+        line1: '',
+        line2: '',
+        city: '',
+        state: '',
+        pincode: '',
+        paymentMethod: 'COD',
+      });
+      setIsCartOpen(false);
+      api.getProducts({ status: 'Active' }).then((products) => {
+        setSavedProducts(normalizeSavedProducts(products));
+      });
+    } catch (error) {
+      triggerToast(error.message || 'Checkout failed. Please try again.');
+    } finally {
+      setIsPlacingOrder(false);
+    }
   };
 
   const sendSupportMessage = (e) => {
@@ -765,6 +817,9 @@ function Main() {
                         );
                       })}
                     </div>
+                    <p className={`mt-3 text-[11px] font-bold ${product.stock > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                    </p>
                   </div>
 
                   <div className="mt-5 border-t border-neutral-100 pt-4">
@@ -777,10 +832,11 @@ function Main() {
 
                     <button
                       onClick={(e) => handleAddToCart(product, e)}
-                      className="w-full bg-[#1c1d1f] hover:bg-[#111111] text-white text-xs font-bold tracking-wider uppercase py-3 px-4 rounded-xl transition duration-200 active:scale-98 flex items-center justify-center space-x-2"
+                      disabled={product.stock <= 0}
+                      className="w-full bg-[#1c1d1f] hover:bg-[#111111] disabled:bg-neutral-300 disabled:text-neutral-500 disabled:cursor-not-allowed text-white text-xs font-bold tracking-wider uppercase py-3 px-4 rounded-xl transition duration-200 active:scale-98 flex items-center justify-center space-x-2"
                     >
                       <ShoppingBag size={14} />
-                      <span>Add to Cart</span>
+                      <span>{product.stock > 0 ? 'Add to Cart' : 'Sold Out'}</span>
                     </button>
                   </div>
                 </div>
@@ -894,9 +950,13 @@ function Main() {
                       cart.map((item) => (
                         <div key={item.cartId} className="flex gap-4 p-4 rounded-xl bg-[#f9f9fb] border border-neutral-200/50 relative">
                           <div className="w-16 h-20 bg-white rounded-lg border border-neutral-150 p-1 shrink-0 flex items-center justify-center">
-                            <svg viewBox="0 0 160 320" className="h-full w-auto">
-                              <rect x="10" y="10" width="140" height="300" rx="20" fill={item.color.hex} />
-                            </svg>
+                            {item.image ? (
+                              <img src={item.image} alt={item.title} className="h-full w-full object-contain" />
+                            ) : (
+                              <svg viewBox="0 0 160 320" className="h-full w-auto">
+                                <rect x="10" y="10" width="140" height="300" rx="20" fill={item.color?.hex || '#111111'} />
+                              </svg>
+                            )}
                           </div>
 
                           <div className="flex-grow flex flex-col justify-between">
@@ -911,9 +971,9 @@ function Main() {
                               <div className="flex items-center space-x-1.5 mt-1">
                                 <span
                                   className="inline-block w-2.5 h-2.5 rounded-full border border-neutral-300"
-                                  style={{ backgroundColor: item.color.hex }}
+                                  style={{ backgroundColor: item.color?.hex || '#111111' }}
                                 />
-                                <span className="text-[10px] text-neutral-400 font-medium">{item.color.name}</span>
+                                <span className="text-[10px] text-neutral-400 font-medium">{item.color?.name || 'Default'}</span>
                               </div>
                             </div>
 
@@ -944,17 +1004,72 @@ function Main() {
 
                   {cart.length > 0 && (
                     <div className="border-t border-neutral-150 px-6 py-6 bg-neutral-50">
-                      <div className="mb-5">
+                      <div className="mb-5 grid grid-cols-1 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <input
+                            value={checkoutForm.name}
+                            onChange={(event) => handleCheckoutField('name', event.target.value)}
+                            placeholder="Customer name"
+                            className="rounded-xl border border-neutral-200 bg-white p-3 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 placeholder:text-neutral-400"
+                          />
+                          <input
+                            value={checkoutForm.phone}
+                            onChange={(event) => handleCheckoutField('phone', event.target.value)}
+                            placeholder="Phone number"
+                            className="rounded-xl border border-neutral-200 bg-white p-3 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 placeholder:text-neutral-400"
+                          />
+                        </div>
+                        <input
+                          value={checkoutForm.email}
+                          onChange={(event) => handleCheckoutField('email', event.target.value)}
+                          placeholder="Email address (optional)"
+                          className="rounded-xl border border-neutral-200 bg-white p-3 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 placeholder:text-neutral-400"
+                        />
                         <label className="block text-[11px] font-black uppercase tracking-wider text-neutral-700 mb-2">
                           Delivery Address
                         </label>
                         <textarea
-                          value={deliveryAddress}
-                          onChange={(event) => setDeliveryAddress(event.target.value)}
-                          rows={3}
-                          placeholder="House name, street, city, PIN code"
+                          value={checkoutForm.line1}
+                          onChange={(event) => handleCheckoutField('line1', event.target.value)}
+                          rows={2}
+                          placeholder="House name, street"
                           className="w-full resize-none rounded-xl border border-neutral-200 bg-white p-3 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 placeholder:text-neutral-400"
                         />
+                        <input
+                          value={checkoutForm.line2}
+                          onChange={(event) => handleCheckoutField('line2', event.target.value)}
+                          placeholder="Apartment, landmark (optional)"
+                          className="rounded-xl border border-neutral-200 bg-white p-3 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 placeholder:text-neutral-400"
+                        />
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <input
+                            value={checkoutForm.city}
+                            onChange={(event) => handleCheckoutField('city', event.target.value)}
+                            placeholder="City"
+                            className="rounded-xl border border-neutral-200 bg-white p-3 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 placeholder:text-neutral-400"
+                          />
+                          <input
+                            value={checkoutForm.state}
+                            onChange={(event) => handleCheckoutField('state', event.target.value)}
+                            placeholder="State"
+                            className="rounded-xl border border-neutral-200 bg-white p-3 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 placeholder:text-neutral-400"
+                          />
+                          <input
+                            value={checkoutForm.pincode}
+                            onChange={(event) => handleCheckoutField('pincode', event.target.value)}
+                            placeholder="PIN"
+                            className="rounded-xl border border-neutral-200 bg-white p-3 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 placeholder:text-neutral-400"
+                          />
+                        </div>
+                        <select
+                          value={checkoutForm.paymentMethod}
+                          onChange={(event) => handleCheckoutField('paymentMethod', event.target.value)}
+                          className="rounded-xl border border-neutral-200 bg-white p-3 text-sm font-semibold text-neutral-900 outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
+                        >
+                          <option value="COD">Cash on Delivery</option>
+                          <option value="UPI">UPI</option>
+                          <option value="Card">Card</option>
+                        </select>
                       </div>
 
                       <div className="space-y-2 mb-6 text-xs">
@@ -974,9 +1089,10 @@ function Main() {
 
                       <button
                         onClick={handleCheckout}
-                        className="w-full bg-black hover:bg-neutral-800 text-white py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition duration-150"
+                        disabled={isPlacingOrder}
+                        className="w-full bg-black hover:bg-neutral-800 disabled:bg-neutral-400 text-white py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition duration-150"
                       >
-                        Secure Checkout (₹{cartSubtotal.toLocaleString('en-IN')})
+                        {isPlacingOrder ? 'Placing Order...' : `Secure Checkout (₹${cartSubtotal.toLocaleString('en-IN')})`}
                       </button>
                     </div>
                   )}

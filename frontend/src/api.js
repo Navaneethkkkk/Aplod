@@ -54,7 +54,10 @@ export const api = {
     }),
 
   // Products
-  getProducts: () => request("/products"),
+  getProducts: (params = {}) => {
+    const query = new URLSearchParams(params);
+    return request(`/products${query.toString() ? `?${query}` : ""}`);
+  },
 
   getProduct: (id) => request(`/products/${id}`),
 
