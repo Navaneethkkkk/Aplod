@@ -1,9 +1,9 @@
 import express from "express";
 import cors from "cors";
 import connectionDB from "./Database/Connection.js";
-import categoryRoutes from "./Routes/categoryRoutes.js";
-import productRoutes from "./Routes/productRoutes.js";
-import orderRoutes from "./Routes/orderRoutes.js";
+import categoryRoutes from "./routes/categoryRoutes.js";
+import productRoutes from "./routes/productRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
 import adminRoutes from "./routes/AdminRoutes.js";
 
 const app = express();

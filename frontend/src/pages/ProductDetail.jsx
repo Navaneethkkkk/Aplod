@@ -16,6 +16,7 @@ function normalizeProduct(product) {
     subtitle: product.category?.name || product.subtitle || 'Premium accessory',
     description: product.description || 'Premium protection with a polished everyday finish.',
     price: product.price || 0,
+    stock: product.stock ?? 1,
     images,
   };
 }
@@ -50,18 +51,26 @@ function ProductDetail() {
     if (!product) return;
 
     const savedCart = JSON.parse(localStorage.getItem('aplodCart') || '[]');
-    const existingIndex = savedCart.findIndex((item) => item.id === product.id);
+    const cartId = `${product.id}-default-detail`;
+    const existingIndex = savedCart.findIndex((item) => item.cartId === cartId);
     const nextCart = [...savedCart];
 
     if (existingIndex > -1) {
+      if (nextCart[existingIndex].quantity >= product.stock) return;
       nextCart[existingIndex].quantity += 1;
     } else {
       nextCart.push({
+        cartId,
         id: product.id,
+        product: product.id,
         title: product.title,
         subtitle: product.subtitle,
+        selectedModel: product.subtitle,
+        selectedColor: 'Default',
+        color: { id: 'default', name: 'Default', hex: '#111111', secondary: '#333333' },
         price: product.price,
         image: gallery[0] || '',
+        stock: product.stock,
         quantity: 1,
       });
     }

@@ -22,10 +22,20 @@ const productSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    brand: {
+      type: String,
+      default: "APLOD",
+      trim: true,
+    },
     price: {
       type: Number,
       required: true,
       min: 0,
+    },
+    compareAtPrice: {
+      type: Number,
+      min: 0,
+      default: 0,
     },
     stock: {
       type: Number,
@@ -51,8 +61,30 @@ const productSchema = new mongoose.Schema(
       enum: ["Active", "Draft"],
       default: "Active",
     },
+    featured: {
+      type: Boolean,
+      default: false,
+    },
+    rating: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: 4.7,
+    },
+    reviewsCount: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    tags: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true }
 );
+
+productSchema.index({ name: "text", description: "text", brand: "text", tags: "text" });
+productSchema.index({ category: 1, status: 1 });
 
 export default mongoose.model("Product", productSchema);

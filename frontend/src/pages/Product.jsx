@@ -25,7 +25,10 @@ function ProductForm() {
     category: "",
     description: "",
     price: "",
+    compareAtPrice: "",
     stock: "",
+    featured: false,
+    tags: "",
     imageUrl: "",
     images: [],
     status: "Active",
@@ -84,7 +87,10 @@ function ProductForm() {
     category: "",
     description: "",
     price: "",
+    compareAtPrice: "",
     stock: "",
+    featured: false,
+    tags: "",
     imageUrl: "",
     images: [],
     status: "Active",
@@ -131,7 +137,13 @@ function ProductForm() {
         : { name: "iPhone Cases", slug: "iphone-cases" },
       description: form.description,
       price: Number(form.price),
+      compareAtPrice: Number(form.compareAtPrice || 0),
       stock: Number(form.stock),
+      featured: form.featured,
+      tags: form.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
       imageUrl: form.images[0] || "",
       images: form.images,
       status: form.status,
@@ -159,7 +171,10 @@ function ProductForm() {
         category: form.category,
         imageUrl: form.images[0] || "",
         price: Number(form.price),
+        compareAtPrice: Number(form.compareAtPrice || 0),
         stock: Number(form.stock),
+        featured: form.featured,
+        tags: form.tags,
       });
 
       setMessage("Product saved successfully");
@@ -227,7 +242,7 @@ function ProductForm() {
               <section className={`rounded-2xl border p-5 ${cardClass}`}>
                 <h3 className="text-xl font-semibold mb-4">Pricing & Inventory</h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                   <input
                     value={form.price}
                     onChange={(event) => updateForm("price", event.target.value)}
@@ -236,6 +251,15 @@ function ProductForm() {
                     className={`border rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500 ${inputClass}`}
                     placeholder="₹ 0.00"
                     required
+                  />
+
+                  <input
+                    value={form.compareAtPrice}
+                    onChange={(event) => updateForm("compareAtPrice", event.target.value)}
+                    type="number"
+                    min="0"
+                    className={`border rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500 ${inputClass}`}
+                    placeholder="MRP / Compare price"
                   />
 
                   <input
@@ -256,6 +280,24 @@ function ProductForm() {
                     <option>Active</option>
                     <option>Draft</option>
                   </select>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
+                  <input
+                    value={form.tags}
+                    onChange={(event) => updateForm("tags", event.target.value)}
+                    className={`border rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500 ${inputClass}`}
+                    placeholder="Tags: magsafe, iphone, cover"
+                  />
+                  <label className={`flex items-center justify-between gap-3 border rounded-xl px-4 py-3 ${inputClass}`}>
+                    <span className="text-sm font-semibold">Featured</span>
+                    <input
+                      type="checkbox"
+                      checked={form.featured}
+                      onChange={(event) => updateForm("featured", event.target.checked)}
+                      className="h-5 w-5 accent-indigo-600"
+                    />
+                  </label>
                 </div>
               </section>
 
