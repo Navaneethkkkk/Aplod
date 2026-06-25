@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import {
   ShoppingBag,
   Search,
@@ -21,10 +22,11 @@ import { api } from '../api';
 import heroBg from '../assets/hero-bg.webp'
 
 const isVideoMedia = (media) => typeof media === 'string' && media.startsWith('data:video');
+const isSeedProduct = (product) => typeof product.sku === 'string' && product.sku.startsWith('APL-');
 
 const normalizeSavedProducts = (products) =>
   products
-    .filter((product) => product.status !== 'Draft')
+    .filter((product) => product.status !== 'Draft' && !isSeedProduct(product))
     .map((product) => {
       const categoryText = `${product.category?.name || ''} ${product.category?.slug || ''}`.toLowerCase();
       const categoryKey = categoryText.includes('screen') || categoryText.includes('protector')
@@ -35,7 +37,7 @@ const normalizeSavedProducts = (products) =>
       const images = product.images?.length ? product.images : product.imageUrl ? [product.imageUrl] : [];
 
       return {
-        id: product._id,
+        id: product._id || product.id,
         title: product.name,
         subtitle: product.category?.name || 'Premium accessory',
         rating: product.rating || 4.8,
@@ -54,6 +56,7 @@ const normalizeSavedProducts = (products) =>
 
 function Main() {
   const navigate = useNavigate();
+  const location = useLocation();
   // Available iPhone Models
   const MODELS = [
     { id: '16-pro-max', name: 'iPhone 16 Pro Max' },
@@ -66,7 +69,7 @@ function Main() {
   // Navigation categories
   const [activeCategory, setActiveCategory] = useState('cases'); // 'cases', 'protectors', 'charging'
 
-  // Custom interactive cart state
+
   const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('aplodCart') || '[]'));
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
@@ -99,140 +102,7 @@ function Main() {
   const [toast, setToast] = useState({ show: false, message: '' });
 
   // Real-time custom state for color swatches per card (indexed by card ID)
-  const [selectedColors, setSelectedColors] = useState({
-    'c-1': { id: 'brown', name: 'Saddle Brown', hex: '#a66e46', secondary: '#835331' },
-    'c-2': {
-      id: 'crystal-clear',
-      name: 'Optically Clear',
-      hex: 'rgba(255, 255, 255, 0.25)',
-      secondary: 'rgba(255, 255, 255, 0.45)',
-      isClear: true,
-    },
-    'c-3': { id: 'midnight', name: 'Midnight Navy', hex: '#1c2430', secondary: '#0e141c' },
-    'c-4': { id: 'black-bumper', name: 'Matte Black', hex: '#2c2d30', secondary: '#111111' },
-  });
-
-  // Raw Product Data conforming precisely to the CASEGEAR screenshot styles
-  const productsData = {
-    cases: [
-      {
-        id: 'c-1',
-        title: 'Modern Leatherite Case Cover',
-        subtitle: 'For iPhone 16 Pro Max',
-        rating: 4.9,
-        reviewsCount: 136,
-        price: 1699,
-        mrp: 1999,
-        type: 'leather',
-        colors: [
-          { id: 'brown', name: 'Saddle Brown', hex: '#a66e46', secondary: '#835331' },
-          { id: 'charcoal', name: 'Charcoal Black', hex: '#2c2d30', secondary: '#191a1c' },
-        ],
-      },
-      {
-        id: 'c-2',
-        title: 'Super Crystal Case Cover',
-        subtitle: 'For iPhone 16',
-        rating: 4.6,
-        reviewsCount: 721,
-        price: 1499,
-        mrp: 2999,
-        type: 'clear',
-        colors: [
-          {
-            id: 'crystal-clear',
-            name: 'Optically Clear',
-            hex: 'rgba(255, 255, 255, 0.25)',
-            secondary: 'rgba(255, 255, 255, 0.45)',
-            isClear: true,
-          },
-        ],
-      },
-      {
-        id: 'c-3',
-        title: 'Silicone Snap Fit Case Cover',
-        subtitle: 'For iPhone 16 Pro Max',
-        rating: 4.6,
-        reviewsCount: 400,
-        price: 1299,
-        mrp: 1999,
-        type: 'silicone',
-        colors: [
-          { id: 'midnight', name: 'Midnight Navy', hex: '#1c2430', secondary: '#0e141c' },
-          { id: 'ocean-blue', name: 'Ocean Blue', hex: '#3d4a5c', secondary: '#2a3543' },
-          { id: 'gray', name: 'Stone Gray', hex: '#8a8279', secondary: '#6a635a' },
-        ],
-      },
-      {
-        id: 'c-4',
-        title: 'Grip Armour Case Cover',
-        subtitle: 'For iPhone 16',
-        rating: 4.6,
-        reviewsCount: 200,
-        price: 1199,
-        mrp: 1999,
-        type: 'armour',
-        colors: [
-          { id: 'black-bumper', name: 'Matte Black Bumper', hex: '#2c2d30', secondary: '#111111' },
-          { id: 'titanium-bumper', name: 'Natural Titanium Bumper', hex: '#a8a29e', secondary: '#78716c' },
-        ],
-      },
-    ],
-    protectors: [
-      {
-        id: 'p-1',
-        title: 'Ultra-Tough Tempered Glass',
-        subtitle: 'For iPhone 16 Pro Max',
-        rating: 4.8,
-        reviewsCount: 89,
-        price: 799,
-        mrp: 1299,
-        type: 'protector',
-        colors: [{ id: 'clear', name: 'HD Clear', hex: '#e2e8f0', secondary: '#94a3b8' }],
-      },
-      {
-        id: 'p-2',
-        title: 'Anti-Glare Privacy Screen Guard',
-        subtitle: 'For iPhone 16 Pro',
-        rating: 4.7,
-        reviewsCount: 142,
-        price: 899,
-        mrp: 1499,
-        type: 'protector',
-        colors: [{ id: 'privacy', name: 'Matte Privacy', hex: '#1e293b', secondary: '#0f172a' }],
-      },
-    ],
-    charging: [
-      {
-        id: 'ch-1',
-        title: 'MagSafe 15W Rapid Wireless Charger',
-        subtitle: 'High-grade Aluminium base',
-        rating: 4.9,
-        reviewsCount: 310,
-        price: 2499,
-        mrp: 3999,
-        type: 'charger',
-        colors: [
-          { id: 'silver', name: 'Sleek Silver', hex: '#e2e8f0', secondary: '#cbd5e1' },
-          { id: 'space-gray', name: 'Space Gray', hex: '#4b5563', secondary: '#1f2937' },
-        ],
-      },
-      {
-        id: 'ch-2',
-        title: '65W GaN Triple-Port Travel Adaptor',
-        subtitle: 'Super fast charging hub',
-        rating: 4.8,
-        reviewsCount: 195,
-        price: 1999,
-        mrp: 2999,
-        type: 'charger',
-        colors: [
-          { id: 'pure-white', name: 'Classic White', hex: '#ffffff', secondary: '#f1f5f9' },
-          { id: 'midnight-black', name: 'Midnight Black', hex: '#111827', secondary: '#030712' },
-        ],
-      },
-    ],
-  };
+  const [selectedColors, setSelectedColors] = useState({});
 
   useEffect(() => {
     const localProducts = JSON.parse(localStorage.getItem('aplodProducts') || '[]');
@@ -251,6 +121,13 @@ function Main() {
   useEffect(() => {
     localStorage.setItem('aplodCart', JSON.stringify(cart));
   }, [cart]);
+
+  useEffect(() => {
+    if (location.state?.openCart) {
+      setIsCartOpen(true);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   const triggerToast = (message) => {
     setToast({ show: true, message });
@@ -465,7 +342,7 @@ function Main() {
             <div className="flex items-center space-x-4">
               <div className="relative">
                 {searchOpen ? (
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-white border border-neutral-200 rounded-full py-1.5 px-3 flex items-center space-x-2 shadow-md w-64 animate-fade-in">
+                  <div className="fixed left-4 right-4 top-4 z-50 bg-white border border-neutral-200 rounded-full py-1.5 px-3 flex items-center space-x-2 shadow-md animate-fade-in sm:absolute sm:left-auto sm:right-0 sm:top-1/2 sm:z-auto sm:w-64 sm:-translate-y-1/2">
                     <input
                       type="text"
                       placeholder="Search covers, models..."
@@ -924,10 +801,10 @@ function Main() {
               onClick={() => setIsCartOpen(false)}
               className="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
             />
-            <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
-              <div className="pointer-events-auto w-screen max-w-md transform transition duration-500">
+            <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-0 sm:pl-10">
+              <div className="pointer-events-auto w-screen max-w-full sm:max-w-md transform transition duration-500">
                 <div className="flex h-full flex-col bg-white shadow-2xl">
-                  <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-100">
+                  <div className="flex items-center justify-between px-4 sm:px-6 py-5 border-b border-neutral-100">
                     <h3 className="text-base font-black uppercase tracking-wider text-neutral-900 flex items-center space-x-2">
                       <ShoppingBag size={18} />
                       <span>Your Shopping Cart</span>
@@ -937,7 +814,7 @@ function Main() {
                     </button>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+                  <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4">
                     {cart.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-full text-center">
                         <span className="text-4xl mb-3">🛍️</span>
@@ -948,10 +825,12 @@ function Main() {
                       </div>
                     ) : (
                       cart.map((item) => (
-                        <div key={item.cartId} className="flex gap-4 p-4 rounded-xl bg-[#f9f9fb] border border-neutral-200/50 relative">
+                        <div key={item.cartId} className="flex gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-[#f9f9fb] border border-neutral-200/50 relative">
                           <div className="w-16 h-20 bg-white rounded-lg border border-neutral-150 p-1 shrink-0 flex items-center justify-center">
-                            {item.image ? (
-                              <img src={item.image} alt={item.title} className="h-full w-full object-contain" />
+                            {isVideoMedia(item.image) ? (
+                              <video src={item.image} muted playsInline className="h-full w-full object-contain rounded-md bg-black" />
+                            ) : item.image ? (
+                              <img src={item.image} alt={item.title} className="h-full w-full object-contain rounded-md" />
                             ) : (
                               <svg viewBox="0 0 160 320" className="h-full w-auto">
                                 <rect x="10" y="10" width="140" height="300" rx="20" fill={item.color?.hex || '#111111'} />
@@ -973,7 +852,7 @@ function Main() {
                                   className="inline-block w-2.5 h-2.5 rounded-full border border-neutral-300"
                                   style={{ backgroundColor: item.color?.hex || '#111111' }}
                                 />
-                                <span className="text-[10px] text-neutral-400 font-medium">{item.color?.name || 'Default'}</span>
+                                <span className="text-[10px] text-neutral-400 font-medium">{item.color?.name || item.selectedColor || 'Default'}</span>
                               </div>
                             </div>
 
@@ -1003,7 +882,7 @@ function Main() {
                   </div>
 
                   {cart.length > 0 && (
-                    <div className="border-t border-neutral-150 px-6 py-6 bg-neutral-50">
+                    <div className="border-t border-neutral-150 px-4 sm:px-6 py-6 bg-neutral-50">
                       <div className="mb-5 grid grid-cols-1 gap-3">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <input
