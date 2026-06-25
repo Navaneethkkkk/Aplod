@@ -28,6 +28,10 @@ function ProductDetail() {
   const [product, setProduct] = useState(() => normalizeProduct(state?.product));
   const [activeImage, setActiveImage] = useState(product?.images?.[0] || '');
   const [added, setAdded] = useState(false);
+  const [cartCount, setCartCount] = useState(() => {
+    const savedCart = JSON.parse(localStorage.getItem('aplodCart') || '[]');
+    return savedCart.reduce((total, item) => total + Number(item.quantity || 0), 0);
+  });
 
   useEffect(() => {
     if (product?.images?.length) return;
@@ -76,6 +80,7 @@ function ProductDetail() {
     }
 
     localStorage.setItem('aplodCart', JSON.stringify(nextCart));
+    setCartCount(nextCart.reduce((total, item) => total + Number(item.quantity || 0), 0));
     setAdded(true);
     window.setTimeout(() => setAdded(false), 2500);
   };
@@ -98,20 +103,31 @@ function ProductDetail() {
   }
 
   return (
-    <div className="h-screen w-screen bg-[#faf9f6] text-[#1a1a1a] font-sans antialiased selection:bg-neutral-200 flex flex-col overflow-hidden">
+    <div className="min-h-screen lg:h-screen w-full bg-[#faf9f6] text-[#1a1a1a] font-sans antialiased selection:bg-neutral-200 flex flex-col overflow-y-auto lg:overflow-hidden">
       
       {/* Premium Header */}
       <header className="flex-none bg-[#faf9f6]/80 backdrop-blur-md border-b border-neutral-200/40">
-        <div className="max-w-7xl mx-auto px-6 sm:px-12 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 h-16 flex items-center justify-between">
           <button 
             onClick={() => navigate('/')} 
             className="group inline-flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-neutral-500 hover:text-black transition-colors"
           >
             <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-1" />
-            Back
+            <span className="hidden sm:inline">Back</span>
           </button>
-          <span className="text-xl font-light tracking-[0.25em] translate-x-4">APLOD</span>
-          <div className="w-16" />
+          <span className="text-lg sm:text-xl font-light tracking-[0.22em] sm:tracking-[0.25em]">APLOD</span>
+          <button
+            onClick={() => navigate('/', { state: { openCart: true } })}
+            className="relative p-2 text-neutral-700 hover:text-black transition"
+            title="Shopping Bag"
+          >
+            <ShoppingBag size={20} strokeWidth={2} />
+            {cartCount > 0 && (
+              <span className="absolute top-1 right-1 bg-black text-white text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </button>
         </div>
       </header>
 
@@ -124,24 +140,24 @@ function ProductDetail() {
       )}
 
       {/* Main Container - Adjusted for Single Screen Layout */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-6 sm:px-12 py-6 grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-8 min-h-0">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-12 py-5 sm:py-6 grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6 lg:gap-8 min-h-0">
         
         {/* Left Side: Media Gallery (No Scroll Area) */}
         <section className="flex flex-col gap-4 min-h-0 h-full justify-center">
           {/* Main Showcase Window */}
-          <div className="flex-1 bg-white border border-neutral-200/60 rounded-2xl flex items-center justify-center p-6 min-h-0 relative group">
+          <div className="bg-white border border-neutral-200/60 rounded-2xl flex items-center justify-center p-4 sm:p-6 min-h-[320px] lg:min-h-0 lg:flex-1 relative group">
             {isVideoMedia(activeImage) ? (
               <video
                 src={activeImage}
                 controls
                 muted
-                className="h-full w-full object-contain max-h-[70vh] p-2 bg-black rounded-xl"
+                className="h-full w-full object-contain max-h-[52vh] lg:max-h-[70vh] p-2 bg-black rounded-xl"
               />
             ) : activeImage ? (
               <img 
                 src={activeImage} 
                 alt={product.title} 
-                className="h-full w-full object-contain mix-blend-multiply max-h-[70vh] p-2" 
+                className="h-full w-full object-contain mix-blend-multiply max-h-[52vh] lg:max-h-[70vh] p-2" 
               />
             ) : (
               <div className="h-64 w-36 rounded-[28px] border-[6px] border-neutral-900 bg-neutral-50 shadow-xl" />
@@ -150,7 +166,7 @@ function ProductDetail() {
 
           {/* Image Thumbnails Strip */}
           {gallery.length > 1 && (
-            <div className="flex-none flex justify-center gap-3 pb-2">
+            <div className="flex-none flex justify-start sm:justify-center gap-3 pb-2 overflow-x-auto">
               {gallery.map((image, index) => (
                 <button
                   key={`${index}-${image.slice(0, 24)}`}
@@ -177,7 +193,7 @@ function ProductDetail() {
         </section>
 
         {/* Right Side: Product Details */}
-        <section className="flex flex-col justify-center h-full pr-0 lg:pr-8">
+        <section className="flex flex-col justify-center h-full pr-0 lg:pr-8 pb-8 lg:pb-0">
           <div>
             <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-neutral-400">
               {product.subtitle}
@@ -211,7 +227,7 @@ function ProductDetail() {
           </div>
 
           {/* Minimal Value Propositions */}
-          <div className="mt-8 border-t border-neutral-200/50 pt-6 max-w-md grid grid-cols-3 gap-4">
+          <div className="mt-8 border-t border-neutral-200/50 pt-6 max-w-md grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="flex flex-col items-center text-center p-1">
               <Truck size={14} className="text-neutral-400 mb-1" />
               <h4 className="text-[11px] font-medium text-neutral-800">Free Shipping</h4>
